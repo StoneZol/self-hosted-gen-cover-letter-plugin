@@ -27,8 +27,6 @@ export const resumeSchema = z.object({
     certifications: z.array(z.object({
         name: z.string(),
         description: z.string(),
-        startDate: z.string(),
-        endDate: z.string(),
     })),
 })
 export type Resume = z.infer<typeof resumeSchema>
