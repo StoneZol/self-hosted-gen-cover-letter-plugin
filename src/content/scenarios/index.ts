@@ -1,0 +1,1 @@
+export { mountResumeScenario } from './resume'

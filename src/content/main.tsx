@@ -1,31 +1,32 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { SaveResume } from './_components/SaveResume'
-import { getResumeContentElement } from './resumePage'
-import { DEFAULT_CONTENT_CONFIG, INJECTED_WIDGET_SELECTOR } from '@/lib/configs/content/config'
+import { APP_PAGE_INFO_STORAGE_KEY } from '@/lib/configs/app/pageStorage'
+import type { AppPageInfo } from '@/lib/types/app/page'
+import { isResumePage } from '@/lib/hh/page'
+import { mountResumeScenario } from './scenarios'
 
-function isResumePage(url: string): boolean {
-  return new RegExp(DEFAULT_CONTENT_CONFIG.resumePagePattern, 'i').test(url)
+function syncContentScenarios(url: string): void {
+    if (isResumePage(url)) {
+        mountResumeScenario()
+    }
 }
 
-function mountResumeActions(): void {
-  const targetElement = getResumeContentElement()
+function handlePageInfoChange(pageInfo?: AppPageInfo): void {
+    if (!pageInfo) {
+        return
+    }
 
-  if (!targetElement) {
-    return
-  }
+    if (pageInfo.url !== window.location.href) {
+        return
+    }
 
-  const container = document.createElement('div')
-  container.id = INJECTED_WIDGET_SELECTOR.replace(/^#/, '')
-  targetElement.prepend(container)
-
-  createRoot(container).render(
-    <StrictMode>
-      <SaveResume />
-    </StrictMode>,
-  )
+    syncContentScenarios(pageInfo.url)
 }
 
-if (isResumePage(window.location.href)) {
-  mountResumeActions()
-}
+syncContentScenarios(window.location.href)
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local' || !changes[APP_PAGE_INFO_STORAGE_KEY]) {
+        return
+    }
+
+    handlePageInfoChange(changes[APP_PAGE_INFO_STORAGE_KEY].newValue as AppPageInfo | undefined)
+})

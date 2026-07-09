@@ -18,6 +18,7 @@ export default defineManifest({
         'sidePanel',
         'contentSettings',
         'storage',
+        'tabs',
     ],
     host_permissions: [
         'http://localhost/*',
