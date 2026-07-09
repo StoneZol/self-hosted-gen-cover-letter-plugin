@@ -1,5 +1,6 @@
 import { Suspense, use } from 'react'
 import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
+import { DEFAULT_COVER_LETTER_CONFIG } from '@/lib/configs/coverLetter/storage'
 import { ScreenHeader } from '../../ScreenHeader'
 import { loadSettingsScreenData, useSettingsScreen } from './SettingsScreen.hooks'
 import { SettingsSection } from './SettingsSection'
@@ -17,8 +18,10 @@ const SettingsScreenContent = () => {
     const {
         llmConfig,
         contentConfig,
+        coverLetterConfig,
         isSaving,
         updateLlmConfig,
+        updateCoverLetterConfig,
         updateContentPlatform,
         handleSaveConfigs,
         handleResetConfigs,
@@ -91,6 +94,35 @@ const SettingsScreenContent = () => {
                         defaultExample: '700',
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('maxTokens', Number(value) || 0),
+                    },
+                ]}
+            />
+
+            <SettingsSection
+                title="Сопроводительное письмо"
+                description="Промпт уходит в нейросеть. Подпись приклеиваем к результату локально, без отправки в LLM."
+                fields={[
+                    {
+                        key: 'basePrompt',
+                        label: 'Базовый промпт',
+                        value: coverLetterConfig.basePrompt,
+                        description:
+                            'Системные инструкции для генерации сопроводительного. Сюда можно описать тон, структуру и ограничения для модели.',
+                        defaultExample: DEFAULT_COVER_LETTER_CONFIG.basePrompt,
+                        rows: 8,
+                        helperText: 'Передаётся в LLM при генерации.',
+                        onChange: (value) => updateCoverLetterConfig('basePrompt', value),
+                    },
+                    {
+                        key: 'letterSignature',
+                        label: 'Подпись в конце письма',
+                        value: coverLetterConfig.letterSignature,
+                        description:
+                            'Текст, который добавляется в конец готового сопроводительного после генерации: прощание, имя, контакты.',
+                        defaultExample: DEFAULT_COVER_LETTER_CONFIG.letterSignature,
+                        rows: 5,
+                        helperText: 'Не передаётся в нейросеть. Добавляется к ответу модели на нашей стороне.',
+                        onChange: (value) => updateCoverLetterConfig('letterSignature', value),
                     },
                 ]}
             />

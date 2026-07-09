@@ -3,8 +3,8 @@ import { z } from "zod"
 export const resumeSchema = z.object({
     id: z.string(),
     title: z.string(),
-    source: z.enum(['hh']),
-    language: z.enum(['en', 'ru']),
+    source: z.string(),
+    language: z.string(),
     selfAbout: z.string().optional(),
     experience: z.array(z.object({
         company: z.string(),
@@ -30,3 +30,9 @@ export const resumeSchema = z.object({
     })),
 })
 export type Resume = z.infer<typeof resumeSchema>
+
+export type ResumeSelectionState = {
+    resumes: Resume[]
+    selectedResumeId: string | null
+    selectedResume: Resume | null
+}
