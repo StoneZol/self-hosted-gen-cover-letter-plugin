@@ -1,32 +1,26 @@
-import { APP_PAGE_INFO_STORAGE_KEY } from '@/lib/configs/app/pageStorage'
-import type { AppPageInfo } from '@/lib/types/app/page'
-import { isResumePage } from '@/lib/hh/page'
-import { mountResumeScenario } from './scenarios'
+import { isResumePage, isVacancyPage } from '@/lib/hh/page'
+import { initContentConfig } from './contentConfigRuntime'
+import {
+    mountResumeScenario,
+    mountVacancyResponseScenario,
+    unmountVacancyResponseScenario,
+} from './scenarios'
+import { watchUrlChanges } from './watchUrlChanges'
 
 function syncContentScenarios(url: string): void {
     if (isResumePage(url)) {
         mountResumeScenario()
     }
+
+    if (isVacancyPage(url)) {
+        mountVacancyResponseScenario()
+        return
+    }
+
+    unmountVacancyResponseScenario()
 }
 
-function handlePageInfoChange(pageInfo?: AppPageInfo): void {
-    if (!pageInfo) {
-        return
-    }
-
-    if (pageInfo.url !== window.location.href) {
-        return
-    }
-
-    syncContentScenarios(pageInfo.url)
-}
-
-syncContentScenarios(window.location.href)
-
-chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== 'local' || !changes[APP_PAGE_INFO_STORAGE_KEY]) {
-        return
-    }
-
-    handlePageInfoChange(changes[APP_PAGE_INFO_STORAGE_KEY].newValue as AppPageInfo | undefined)
+void initContentConfig().then(() => {
+    syncContentScenarios(window.location.href)
+    watchUrlChanges(syncContentScenarios)
 })

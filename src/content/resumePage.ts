@@ -1,5 +1,6 @@
 import {
     DEFAULT_CONTENT_CONFIG,
+    getResumeContentElementFromConfig,
     INJECTED_WIDGET_SELECTOR,
 } from '@/lib/configs/content/config'
 
@@ -35,7 +36,7 @@ function dedupeSequentialLines(lines: string[]): string[] {
 }
 
 export function getResumeContentElement(): HTMLElement | null {
-    return document.querySelector<HTMLElement>(DEFAULT_CONTENT_CONFIG.resumeContentSelector)
+    return getResumeContentElementFromConfig(window.location.href, DEFAULT_CONTENT_CONFIG)
 }
 
 export function extractResumeText(): string | null {
