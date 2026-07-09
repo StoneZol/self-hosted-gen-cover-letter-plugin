@@ -4,6 +4,7 @@ import type {
     ChatMessage,
     OpenAiCompatibleConfig,
 } from '../../types/llm/types'
+import { assertExtensionNetworkContext } from '../../extension/networkGuard'
 
 function trimTrailingSlash(value: string): string {
     return value.endsWith('/') ? value.slice(0, -1) : value
@@ -17,6 +18,8 @@ async function postChatCompletion(
     config: OpenAiCompatibleConfig,
     payload: ChatCompletionRequest,
 ): Promise<ChatCompletionResponse> {
+    assertExtensionNetworkContext()
+
     const response = await fetch(buildChatCompletionsUrl(config.baseUrl), {
         method: 'POST',
         headers: {

@@ -71,13 +71,27 @@ export async function loadResumes(): Promise<Resume[]> {
     const result = await chrome.storage.local.get(RESUMES_STORAGE_KEY)
     const storedResumes = result[RESUMES_STORAGE_KEY] as Resume[] | undefined
 
-    if (storedResumes && storedResumes.length > 0) {
-        return storedResumes
-    }
+    return storedResumes ?? []
+}
 
-    await saveResumes(DEFAULT_RESUMES)
+export async function findResumeById(resumeId: string): Promise<Resume | null> {
+    const resumes = await loadResumes()
 
-    return DEFAULT_RESUMES
+    return resumes.find((resume) => resume.id === resumeId) ?? null
+}
+
+export async function upsertResume(resume: Resume): Promise<{ isUpdate: boolean }> {
+    const resumes = await loadResumes()
+    const existingIndex = resumes.findIndex((storedResume) => storedResume.id === resume.id)
+    const isUpdate = existingIndex >= 0
+    const nextResumes = isUpdate
+        ? resumes.map((storedResume, index) => (index === existingIndex ? resume : storedResume))
+        : [...resumes, resume]
+
+    await saveResumes(nextResumes)
+    await saveSelectedResumeId(resume.id)
+
+    return { isUpdate }
 }
 
 export async function saveResumes(resumes: Resume[]): Promise<void> {

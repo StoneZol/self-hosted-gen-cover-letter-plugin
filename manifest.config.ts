@@ -20,6 +20,10 @@ export default defineManifest({
         'storage',
         'tabs',
     ],
+    background: {
+        service_worker: 'src/background/main.ts',
+        type: 'module',
+    },
     host_permissions: [
         'http://localhost/*',
         'http://localhost:1234/*',
