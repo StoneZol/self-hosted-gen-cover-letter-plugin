@@ -14,14 +14,14 @@ import { extractResumeText } from '../../resumePage'
 
 function getSaveHint(existingResume: Resume | null, resumeIdFromUrl: string | null): string {
     if (existingResume) {
-        return `Резюме «${existingResume.title}» уже сохранено. При клике оно будет перезаписано новой версией.`
+        return `«${existingResume.title}»сохранено — клик обновит.`
     }
 
     if (resumeIdFromUrl) {
-        return 'Резюме с этой страницы ещё не сохранено. После обработки оно будет добавлено в расширение.'
+        return 'Сохранится в расширение.'
     }
 
-    return 'После обработки резюме будет добавлено или обновлено по id из ссылки.'
+    return 'Сохранится в расширение.'
 }
 
 const useSaveResumeHook = () => {

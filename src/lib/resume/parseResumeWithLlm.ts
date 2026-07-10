@@ -3,6 +3,7 @@ import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import { resumeSchema, type Resume } from '@/lib/types/resume/types'
 import { buildResumeParsingMessages } from './buildResumeParsingMessages'
 import { parseResumeJsonFromAssistant } from './parseResumeJson'
+import { sanitizeResumeSelfAbout } from './sanitizeResumeSelfAbout'
 
 type ParseResumeWithLlmInput = {
     sourceUrl: string
@@ -25,7 +26,10 @@ export async function parseResumeWithLlm({
         throw new Error('Модель вернула пустой ответ.')
     }
 
-    const parsedResume = parseResumeJsonFromAssistant(assistantText)
+    const parsedResume = resumeSchema.parse(parseResumeJsonFromAssistant(assistantText))
 
-    return resumeSchema.parse(parsedResume)
+    return resumeSchema.parse({
+        ...parsedResume,
+        selfAbout: sanitizeResumeSelfAbout(parsedResume.selfAbout),
+    })
 }

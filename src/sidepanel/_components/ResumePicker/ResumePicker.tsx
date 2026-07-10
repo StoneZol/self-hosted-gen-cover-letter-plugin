@@ -66,10 +66,10 @@ export function ResumePicker({ action, onOpen }: ResumePickerProps) {
                         <select
                             value={selectedResumeId ?? ''}
                             onChange={(event) => void setSelectedResumeId(event.target.value)}
-                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 [color-scheme:light]"
                         >
                             {resumes.map((resume) => (
-                                <option key={resume.id} value={resume.id}>
+                                <option key={resume.id} value={resume.id} className="text-black">
                                     {resume.title}
                                 </option>
                             ))}
