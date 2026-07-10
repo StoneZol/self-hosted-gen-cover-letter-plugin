@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAppStatus } from '@/components/Status'
+import { healthCheckOpenAiCompatible } from '@/lib/api/llm/openaiCompatible'
 import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
 import { loadContentConfig, saveContentConfig } from '@/lib/configs/content/storage'
 import {
@@ -41,12 +42,37 @@ export function resetSettingsScreenData(): void {
     settingsScreenDataPromise = null
 }
 
+type HealthCheckState = 'idle' | 'checking' | 'success' | 'error'
+
+const HEALTH_CHECK_RESET_MS = 2000
+
 export function useSettingsScreen(initialData: SettingsScreenData) {
     const { setStatus } = useAppStatus()
     const [llmConfig, setLlmConfig] = useState(initialData.llmConfig)
     const [contentConfig, setContentConfig] = useState(initialData.contentConfig)
     const [coverLetterConfig, setCoverLetterConfig] = useState(initialData.coverLetterConfig)
     const [isSaving, setIsSaving] = useState(false)
+    const [healthCheckState, setHealthCheckState] = useState<HealthCheckState>('idle')
+    const healthCheckResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    useEffect(() => {
+        return () => {
+            if (healthCheckResetTimerRef.current) {
+                clearTimeout(healthCheckResetTimerRef.current)
+            }
+        }
+    }, [])
+
+    function scheduleHealthCheckReset(): void {
+        if (healthCheckResetTimerRef.current) {
+            clearTimeout(healthCheckResetTimerRef.current)
+        }
+
+        healthCheckResetTimerRef.current = setTimeout(() => {
+            setHealthCheckState('idle')
+            healthCheckResetTimerRef.current = null
+        }, HEALTH_CHECK_RESET_MS)
+    }
 
     function updateLlmConfig<K extends keyof OpenAiCompatibleConfig>(
         key: K,
@@ -141,16 +167,41 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         }
     }
 
+    async function handleLlmHealthCheck() {
+        if (healthCheckState === 'checking') {
+            return
+        }
+
+        setHealthCheckState('checking')
+
+        try {
+            await healthCheckOpenAiCompatible({
+                ...llmConfig,
+                providerType: 'openai-compatible',
+                temperature: Number(llmConfig.temperature) || 0,
+                maxTokens: Number(llmConfig.maxTokens) || 0,
+            })
+
+            setHealthCheckState('success')
+            scheduleHealthCheckReset()
+        } catch {
+            setHealthCheckState('error')
+            scheduleHealthCheckReset()
+        }
+    }
+
     return {
         llmConfig,
         contentConfig,
         coverLetterConfig,
         isSaving,
+        healthCheckState,
         updateLlmConfig,
         updateCoverLetterConfig,
         updateContentConfig,
         updateContentPlatform,
         handleSaveConfigs,
         handleResetConfigs,
+        handleLlmHealthCheck,
     }
 }

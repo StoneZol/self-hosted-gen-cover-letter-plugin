@@ -1,9 +1,25 @@
 import { Suspense, use } from 'react'
 import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
 import { DEFAULT_COVER_LETTER_CONFIG } from '@/lib/configs/coverLetter/storage'
+import { cn } from '@/lib/helpers/cn'
 import { ScreenHeader } from '../../ScreenHeader'
 import { loadSettingsScreenData, useSettingsScreen } from './SettingsScreen.hooks'
 import { SettingsSection } from './SettingsSection'
+
+function getHealthCheckButtonLabel(
+    healthCheckState: 'idle' | 'checking' | 'success' | 'error',
+): string {
+    switch (healthCheckState) {
+        case 'checking':
+            return 'Проверяю подключение...'
+        case 'success':
+            return 'Соединение установлено'
+        case 'error':
+            return 'Ошибка подключения'
+        default:
+            return 'Проверить подключение к LLM'
+    }
+}
 
 function stringifyLines(values: string[]): string {
     return values.join('\n')
@@ -20,11 +36,13 @@ const SettingsScreenContent = () => {
         contentConfig,
         coverLetterConfig,
         isSaving,
+        healthCheckState,
         updateLlmConfig,
         updateCoverLetterConfig,
         updateContentPlatform,
         handleSaveConfigs,
         handleResetConfigs,
+        handleLlmHealthCheck,
     } = useSettingsScreen(initialData)
 
     const defaultPlatform = DEFAULT_CONTENT_CONFIG.platforms[0]
@@ -97,6 +115,25 @@ const SettingsScreenContent = () => {
                     },
                 ]}
             />
+
+            <button
+                type="button"
+                onClick={() => void handleLlmHealthCheck()}
+                disabled={isSaving || healthCheckState !== 'idle'}
+                className={cn(
+                    'rounded-lg border px-4 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed',
+                    healthCheckState === 'idle' &&
+                        'border-border bg-background text-foreground hover:border-primary hover:bg-primary/10',
+                    healthCheckState === 'checking' &&
+                        'border-border bg-background text-foreground opacity-70',
+                    healthCheckState === 'success' &&
+                        'border-green-500/50 bg-green-500/15 text-green-200',
+                    healthCheckState === 'error' &&
+                        'border-red-500/40 bg-red-500/10 text-red-200',
+                )}
+            >
+                {getHealthCheckButtonLabel(healthCheckState)}
+            </button>
 
             <SettingsSection
                 title="Сопроводительное письмо"

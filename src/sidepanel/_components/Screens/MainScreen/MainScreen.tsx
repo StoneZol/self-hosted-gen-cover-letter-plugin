@@ -1,4 +1,3 @@
-import { Sparkles } from 'lucide-react'
 import useScreenStore from '@/sidepanel/store'
 import { LastVacancyBlock } from '../../LastVacancyBlock'
 import { ResumePicker } from '../../ResumePicker'
@@ -9,15 +8,11 @@ export const MainScreen = () => {
 
     return (
         <div className="flex flex-col gap-4">
-            <ScreenHeader title="Главная" showSettings />
+            <ScreenHeader title="Главная" showSettings showGuide />
 
             <section className="rounded-xl border border-border bg-card p-4">
-                <div className="mb-3 flex items-center gap-2 text-primary">
-                    <Sparkles className="h-4 w-4" />
-                    <h2 className="text-sm font-semibold">Быстрый старт</h2>
-                </div>
                 <p className="text-sm text-muted-foreground">
-                    Откройте резюме на hh, сохраните его через кнопку на странице и используйте данные для генерации откликов.
+                    Настройте LLM, сохраните резюме на hh и генерируйте сопроводительные на вакансиях.
                 </p>
             </section>
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings } from 'lucide-react'
+import { ArrowLeft, BookOpen, Settings } from 'lucide-react'
 import useScreenStore from '@/sidepanel/store'
 import { cn } from '@/lib/helpers/cn'
 
@@ -6,6 +6,7 @@ type ScreenHeaderProps = {
     title: string
     showBack?: boolean
     showSettings?: boolean
+    showGuide?: boolean
     className?: string
 }
 
@@ -13,6 +14,7 @@ const ScreenHeader = ({
     title,
     showBack = false,
     showSettings = false,
+    showGuide = false,
     className,
 }: ScreenHeaderProps) => {
     const setScreen = useScreenStore((state) => state.setScreen)
@@ -39,18 +41,31 @@ const ScreenHeader = ({
                 </div>
             </div>
 
-            {showSettings ? (
-                <button
-                    type="button"
-                    onClick={() => setScreen('settings')}
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                    aria-label="Настройки"
-                >
-                    <Settings className="h-4 w-4" />
-                </button>
-            ) : (
-                <div className="h-9 w-9 shrink-0" />
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+                {showGuide ? (
+                    <button
+                        type="button"
+                        onClick={() => setScreen('guide')}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                        aria-label="Гайд"
+                    >
+                        <BookOpen className="h-4 w-4" />
+                    </button>
+                ) : null}
+
+                {showSettings ? (
+                    <button
+                        type="button"
+                        onClick={() => setScreen('settings')}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                        aria-label="Настройки"
+                    >
+                        <Settings className="h-4 w-4" />
+                    </button>
+                ) : (
+                    !showGuide ? <div className="h-9 w-9 shrink-0" /> : null
+                )}
+            </div>
         </header>
     )
 }

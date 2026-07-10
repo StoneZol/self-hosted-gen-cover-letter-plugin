@@ -44,17 +44,19 @@ export async function healthCheckOpenAiCompatible(config: OpenAiCompatibleConfig
         max_tokens: 20,
         messages: [
             {
-                role: 'developer',
-                content: 'Reply with exactly OK.',
-            },
-            {
                 role: 'user',
-                content: 'Health check',
+                content: 'Ты жив?',
             },
         ],
     })
 
-    return response?.choices?.[0]?.message.content?.trim() ?? ''
+    const assistantText = response?.choices?.[0]?.message.content?.trim() ?? ''
+
+    if (!assistantText) {
+        throw new Error('Сервер не вернул текст в ответе.')
+    }
+
+    return assistantText
 }
 
 export async function generateChatCompletion(
