@@ -39,6 +39,7 @@ export const chatCompletionResponseSchema = z.object({
         message: z.object({
             role: z.literal('assistant'),
             content: z.string().nullable(),
+            reasoning_content: z.string().nullable().optional(),
         }),
     })),
     usage: z.object({

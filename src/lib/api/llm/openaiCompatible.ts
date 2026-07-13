@@ -51,11 +51,22 @@ async function postChatCompletion(
     }
 }
 
+function extractHealthCheckText(response: ChatCompletionResponse): string {
+    const message = response?.choices?.[0]?.message
+    const content = message?.content?.trim() ?? ''
+
+    if (content) {
+        return content
+    }
+
+    return message?.reasoning_content?.trim() ?? ''
+}
+
 export async function healthCheckOpenAiCompatible(config: OpenAiCompatibleConfig): Promise<string> {
     const response = await postChatCompletion(config, {
         model: config.model,
         temperature: 0,
-        max_tokens: 20,
+        max_tokens: config.maxTokens,
         messages: [
             {
                 role: 'user',
@@ -64,7 +75,7 @@ export async function healthCheckOpenAiCompatible(config: OpenAiCompatibleConfig
         ],
     })
 
-    const assistantText = response?.choices?.[0]?.message.content?.trim() ?? ''
+    const assistantText = extractHealthCheckText(response)
 
     if (!assistantText) {
         throw new Error('Сервер не вернул текст в ответе.')
