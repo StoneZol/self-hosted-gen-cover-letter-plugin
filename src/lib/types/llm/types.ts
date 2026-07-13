@@ -26,6 +26,7 @@ export const chatCompletionRequestSchema = z.object({
     messages: z.array(chatMessageSchema),
     temperature: z.number().optional(),
     max_tokens: z.number().optional(),
+    reasoning_effort: z.enum(['none', 'low', 'medium', 'high']).optional(),
 })
 export type ChatCompletionRequest = z.infer<typeof chatCompletionRequestSchema>
 

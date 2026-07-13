@@ -1,19 +1,22 @@
-import { INTERNAL_RESUME_PARSING_CONFIG } from '@/lib/configs/internal/resumeParsing'
+import { loadResumeParsingConfig } from '@/lib/configs/resumeParsing/storage'
 import type { ChatMessage } from '@/lib/types/llm/types'
+import { assembleResumeParsingSystemPrompt } from './assembleResumeParsingPrompt'
 
 type BuildResumeParsingMessagesInput = {
     sourceUrl: string
     rawResumeText: string
 }
 
-export function buildResumeParsingMessages({
+export async function buildResumeParsingMessages({
     sourceUrl,
     rawResumeText,
-}: BuildResumeParsingMessagesInput): ChatMessage[] {
+}: BuildResumeParsingMessagesInput): Promise<ChatMessage[]> {
+    const { parsingPrompt } = await loadResumeParsingConfig()
+
     return [
         {
             role: 'developer',
-            content: INTERNAL_RESUME_PARSING_CONFIG.systemPrompt,
+            content: assembleResumeParsingSystemPrompt(parsingPrompt),
         },
         {
             role: 'user',

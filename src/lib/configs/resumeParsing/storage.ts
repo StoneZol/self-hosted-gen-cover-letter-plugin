@@ -1,50 +1,9 @@
-export type InternalResumeParsingConfig = {
-    systemPrompt: string
-}
+import type { ResumeParsingConfig } from '@/lib/types/resumeParsing/types'
 
-export const INTERNAL_RESUME_PARSING_CONFIG: InternalResumeParsingConfig = {
-    systemPrompt: `Ты помощник по структурированию резюме.
+export const DEFAULT_RESUME_PARSING_CONFIG: ResumeParsingConfig = {
+    parsingPrompt: `Ты помощник по структурированию резюме.
 Получаешь полную ссылку на страницу резюме и сырой текст, извлечённый с этой страницы.
-Твоя задача — упорядочить текст и преобразовать его в JSON строго по нашей схеме.
-
-Схема ответа:
-{
-  "id": "string",
-  "title": "string",
-  "source": "string",
-  "language": "string",
-  "selfAbout": "string (optional)",
-  "experience": [
-    {
-      "company": "string",
-      "position": "string",
-      "description": "string",
-      "startDate": "string",
-      "endDate": "string"
-    }
-  ],
-  "education": [
-    {
-      "organization": "string",
-      "degree": "string",
-      "speciality": "string"
-    }
-  ],
-  "skills": ["string"],
-  "projects": [
-    {
-      "name": "string",
-      "description": "string",
-      "link": "string (optional)"
-    }
-  ],
-  "certifications": [
-    {
-      "name": "string",
-      "description": "string"
-    }
-  ]
-}
+Твоя задача — упорядочить текст и преобразовать его в JSON строго по схеме ниже.
 
 Правила:
 - Из переданной sourceUrl извлеки:
@@ -56,6 +15,7 @@ export const INTERNAL_RESUME_PARSING_CONFIG: InternalResumeParsingConfig = {
 - Если секции нет в тексте, верни пустой массив или не указывай selfAbout.
 - Для опциональных полей не используй null. Если значения нет, просто не включай поле в JSON.
 - Даты experience приводи к короткому читаемому виду из текста как есть.
+- В experience.description оставляй суть, до 3–4 коротких пунктов на место работы.
 
 Раздел selfAbout («О себе»):
 - Клади в selfAbout ТОЛЬКО текст из явного раздела «О себе» / «About me» / «Обо мне».
@@ -65,12 +25,33 @@ export const INTERNAL_RESUME_PARSING_CONFIG: InternalResumeParsingConfig = {
 - Не придумывай и не перефразируй selfAbout из должности, навыков или опыта. Без отсебятины.
 
 Разделение skills, education и certifications:
-- skills: все навыки и ключевые компетенции, включая подтверждённые навыки, результаты skill-тестов, skill tags и похожие пункты.
+- skills: только из явных секций навыков резюме — «Навыки», «Ключевые навыки», skill tags, подтверждённые навыки, результаты skill-тестов.
+- НЕ добавляй в skills технологии из описания опыта работы, блоков «Стек:» в experience и перечислений внутри обязанностей.
+- Каждый навык — отдельный короткий пункт. Без группировок вроде «TypeScript, JavaScript, React...» одной строкой.
+- Без дубликатов: если навык уже есть, не повторяй его другой формулировкой.
 - education: основное и высшее образование, вузы, колледжи, факультеты, специальности.
 - certifications: только реальное дополнительное обучение — курсы, повышение квалификации, тренинги, bootcamp, онлайн-курсы с завершением, сертификационные программы.
 - Подтверждённые навыки, результаты skill-тестов и обычные skill tags НЕ клади в certifications. Они всегда относятся к skills.
 - Основное образование НЕ дублируй в certifications. Оно относится только к education.
-- Если дополнительного обучения в тексте нет, верни certifications: [].
-
-- Верни только валидный JSON без markdown, комментариев и пояснений.`,
+- Если дополнительного обучения в тексте нет, верни certifications: [].`,
 }
+
+const STORAGE_KEY = 'resumeParsingConfig'
+
+export async function loadResumeParsingConfig(): Promise<ResumeParsingConfig> {
+    const result = await chrome.storage.local.get(STORAGE_KEY)
+    const storedConfig = result[STORAGE_KEY] as Partial<ResumeParsingConfig> | undefined
+
+    return {
+        parsingPrompt:
+            storedConfig?.parsingPrompt ?? DEFAULT_RESUME_PARSING_CONFIG.parsingPrompt,
+    }
+}
+
+export async function saveResumeParsingConfig(config: ResumeParsingConfig): Promise<void> {
+    await chrome.storage.local.set({
+        [STORAGE_KEY]: config,
+    })
+}
+
+export { STORAGE_KEY as RESUME_PARSING_CONFIG_STORAGE_KEY }

@@ -1,6 +1,7 @@
 import { Suspense, use } from 'react'
 import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
 import { DEFAULT_COVER_LETTER_CONFIG } from '@/lib/configs/coverLetter/storage'
+import { DEFAULT_RESUME_PARSING_CONFIG } from '@/lib/configs/resumeParsing/storage'
 import { cn } from '@/lib/helpers/cn'
 import { ScreenHeader } from '../../ScreenHeader'
 import { loadSettingsScreenData, useSettingsScreen } from './SettingsScreen.hooks'
@@ -35,10 +36,12 @@ const SettingsScreenContent = () => {
         llmConfig,
         contentConfig,
         coverLetterConfig,
+        resumeParsingConfig,
         isSaving,
         healthCheckState,
         updateLlmConfig,
         updateCoverLetterConfig,
+        updateResumeParsingConfig,
         updateContentPlatform,
         handleSaveConfigs,
         handleResetConfigs,
@@ -109,7 +112,7 @@ const SettingsScreenContent = () => {
                         label: 'Макс. токены',
                         value: String(llmConfig.maxTokens),
                         description: 'Максимальное количество токенов в ответе модели.',
-                        defaultExample: '700',
+                        defaultExample: '6000',
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('maxTokens', Number(value) || 0),
                     },
@@ -160,6 +163,24 @@ const SettingsScreenContent = () => {
                         rows: 5,
                         helperText: 'Не передаётся в нейросеть. Добавляется к ответу модели на нашей стороне.',
                         onChange: (value) => updateCoverLetterConfig('letterSignature', value),
+                    },
+                ]}
+            />
+
+            <SettingsSection
+                title="Парсинг резюме"
+                description="Правила извлечения данных из текста резюме. Схема JSON подставляется автоматически и не редактируется."
+                fields={[
+                    {
+                        key: 'parsingPrompt',
+                        label: 'Промпт парсинга',
+                        value: resumeParsingConfig.parsingPrompt,
+                        description:
+                            'Инструкции для LLM: как раскладывать резюме по полям, что класть в skills, selfAbout и т.д. Структура JSON-объекта добавляется к промпту автоматически.',
+                        defaultExample: DEFAULT_RESUME_PARSING_CONFIG.parsingPrompt,
+                        rows: 18,
+                        helperText: 'Редактируйте правила. Схему объекта менять не нужно — она фиксирована.',
+                        onChange: (value) => updateResumeParsingConfig('parsingPrompt', value),
                     },
                 ]}
             />

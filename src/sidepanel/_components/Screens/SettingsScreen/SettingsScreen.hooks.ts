@@ -10,14 +10,21 @@ import {
 } from '@/lib/configs/coverLetter/storage'
 import { DEFAULT_LLM_CONFIG } from '@/lib/configs/llm/storage'
 import { loadLlmConfig, saveLlmConfig } from '@/lib/configs/llm/storage'
+import {
+    DEFAULT_RESUME_PARSING_CONFIG,
+    loadResumeParsingConfig,
+    saveResumeParsingConfig,
+} from '@/lib/configs/resumeParsing/storage'
 import type { ContentConfig, ContentPlatform } from '@/lib/types/content/types'
 import type { CoverLetterConfig } from '@/lib/types/coverLetter/types'
 import type { OpenAiCompatibleConfig } from '@/lib/types/llm/types'
+import type { ResumeParsingConfig } from '@/lib/types/resumeParsing/types'
 
 type SettingsScreenData = {
     llmConfig: OpenAiCompatibleConfig
     contentConfig: ContentConfig
     coverLetterConfig: CoverLetterConfig
+    resumeParsingConfig: ResumeParsingConfig
 }
 
 let settingsScreenDataPromise: Promise<SettingsScreenData> | null = null
@@ -28,10 +35,12 @@ export function loadSettingsScreenData(): Promise<SettingsScreenData> {
             loadLlmConfig(),
             loadContentConfig(),
             loadCoverLetterConfig(),
-        ]).then(([llmConfig, contentConfig, coverLetterConfig]) => ({
+            loadResumeParsingConfig(),
+        ]).then(([llmConfig, contentConfig, coverLetterConfig, resumeParsingConfig]) => ({
             llmConfig,
             contentConfig,
             coverLetterConfig,
+            resumeParsingConfig,
         }))
     }
 
@@ -51,6 +60,7 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
     const [llmConfig, setLlmConfig] = useState(initialData.llmConfig)
     const [contentConfig, setContentConfig] = useState(initialData.contentConfig)
     const [coverLetterConfig, setCoverLetterConfig] = useState(initialData.coverLetterConfig)
+    const [resumeParsingConfig, setResumeParsingConfig] = useState(initialData.resumeParsingConfig)
     const [isSaving, setIsSaving] = useState(false)
     const [healthCheckState, setHealthCheckState] = useState<HealthCheckState>('idle')
     const healthCheckResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -94,6 +104,16 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         }))
     }
 
+    function updateResumeParsingConfig<K extends keyof ResumeParsingConfig>(
+        key: K,
+        value: ResumeParsingConfig[K],
+    ) {
+        setResumeParsingConfig((currentConfig) => ({
+            ...currentConfig,
+            [key]: value,
+        }))
+    }
+
     function updateContentConfig<K extends keyof ContentConfig>(key: K, value: ContentConfig[K]) {
         setContentConfig((currentConfig) => ({
             ...currentConfig,
@@ -127,6 +147,7 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
                 }),
                 saveContentConfig(contentConfig),
                 saveCoverLetterConfig(coverLetterConfig),
+                saveResumeParsingConfig(resumeParsingConfig),
             ])
 
             resetSettingsScreenData()
@@ -150,11 +171,13 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
                 saveLlmConfig(DEFAULT_LLM_CONFIG),
                 saveContentConfig(DEFAULT_CONTENT_CONFIG),
                 saveCoverLetterConfig(DEFAULT_COVER_LETTER_CONFIG),
+                saveResumeParsingConfig(DEFAULT_RESUME_PARSING_CONFIG),
             ])
 
             setLlmConfig(DEFAULT_LLM_CONFIG)
             setContentConfig(DEFAULT_CONTENT_CONFIG)
             setCoverLetterConfig(DEFAULT_COVER_LETTER_CONFIG)
+            setResumeParsingConfig(DEFAULT_RESUME_PARSING_CONFIG)
             resetSettingsScreenData()
             await setStatus('Конфиги сброшены к значениям по умолчанию.', 'success')
         } catch (error: unknown) {
@@ -194,10 +217,12 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         llmConfig,
         contentConfig,
         coverLetterConfig,
+        resumeParsingConfig,
         isSaving,
         healthCheckState,
         updateLlmConfig,
         updateCoverLetterConfig,
+        updateResumeParsingConfig,
         updateContentConfig,
         updateContentPlatform,
         handleSaveConfigs,

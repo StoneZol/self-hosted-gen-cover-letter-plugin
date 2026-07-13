@@ -6,7 +6,7 @@ export const DEFAULT_LLM_CONFIG: OpenAiCompatibleConfig = {
     apiKey: 'lm-studio',
     model: 'local-model',
     temperature: 0.2,
-    maxTokens: 700,
+    maxTokens: 6000,
 }
 
 const STORAGE_KEY = 'llmConfig'

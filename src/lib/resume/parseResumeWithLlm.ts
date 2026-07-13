@@ -15,15 +15,23 @@ export async function parseResumeWithLlm({
     rawResumeText,
 }: ParseResumeWithLlmInput): Promise<Resume> {
     const llmConfig = await loadLlmConfig()
-    const messages = buildResumeParsingMessages({
+    const messages = await buildResumeParsingMessages({
         sourceUrl,
         rawResumeText,
     })
-    const response = await generateChatCompletion(llmConfig, messages)
+    const response = await generateChatCompletion(llmConfig, messages, {
+        temperature: 0.1,
+    })
     const assistantText = extractAssistantText(response)
 
     if (!assistantText) {
         throw new Error('Модель вернула пустой ответ.')
+    }
+
+    const finishReason = response?.choices?.[0]?.finish_reason
+
+    if (finishReason === 'length') {
+        throw new Error('Ответ модели обрезан по max tokens. Увеличьте max tokens в настройках LLM.')
     }
 
     const parsedResume = resumeSchema.parse(parseResumeJsonFromAssistant(assistantText))
