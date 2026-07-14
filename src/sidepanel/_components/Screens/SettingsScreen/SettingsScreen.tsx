@@ -4,6 +4,13 @@ import { DEFAULT_COVER_LETTER_CONFIG } from '@/lib/configs/coverLetter/storage'
 import { DEFAULT_RESUME_PARSING_CONFIG } from '@/lib/configs/resumeParsing/storage'
 import { cn } from '@/lib/helpers/cn'
 import { ScreenHeader } from '../../ScreenHeader'
+import {
+    getPlatformDisplayTitle,
+    parseNullableLinesForEdit,
+    parseNullableString,
+    stringifyNullable,
+    stringifyNullableLines,
+} from './contentPlatformFieldUtils'
 import { loadSettingsScreenData, useSettingsScreen } from './SettingsScreen.hooks'
 import { SettingsSection } from './SettingsSection'
 
@@ -22,14 +29,6 @@ function getHealthCheckButtonLabel(
     }
 }
 
-function stringifyLines(values: string[]): string {
-    return values.join('\n')
-}
-
-function parseLinesForEdit(value: string): string[] {
-    return value.split('\n')
-}
-
 const SettingsScreenContent = () => {
     const initialData = use(loadSettingsScreenData())
     const {
@@ -43,6 +42,8 @@ const SettingsScreenContent = () => {
         updateCoverLetterConfig,
         updateResumeParsingConfig,
         updateContentPlatform,
+        addContentPlatform,
+        removeContentPlatform,
         handleSaveConfigs,
         handleResetConfigs,
         handleLlmHealthCheck,
@@ -187,45 +188,47 @@ const SettingsScreenContent = () => {
 
             <SettingsSection
                 title="Контент"
-                description="Список платформ с ручным `id`, названием, флагом включения и массивами matcher/selectors."
+                description="Список платформ с ручным id, названием, флагом включения и массивами matcher/selectors. Для пустых значений используйте null."
                 fields={[]}
             />
 
             {contentConfig.platforms.map((platform, platformIndex) => (
                 <SettingsSection
-                    key={platform.id}
-                    title={`Платформа: ${platform.title || platform.id}`}
+                    key={`platform-${platformIndex}`}
+                    title={`Платформа: ${getPlatformDisplayTitle(platform, platformIndex)}`}
                     description="Одна запись описывает одну платформу или сайт, который умеем матчить и парсить."
                     defaultCollapsed
+                    onDelete={() => removeContentPlatform(platformIndex)}
+                    deleteLabel="Удалить платформу"
                     fields={[
                         {
-                            key: `${platform.id}-id`,
+                            key: `${platformIndex}-id`,
                             label: 'ID платформы',
-                            value: platform.id,
+                            value: stringifyNullable(platform.id),
                             description: 'Технический уникальный идентификатор платформы. Задаётся вручную и используется кодом.',
-                            defaultExample: defaultPlatform.id,
-                            helperText: 'Одно значение.',
+                            defaultExample: defaultPlatform.id ?? 'null',
+                            helperText: 'Одно значение или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    id: value,
+                                    id: parseNullableString(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-title`,
+                            key: `${platformIndex}-title`,
                             label: 'Название платформы',
-                            value: platform.title,
+                            value: stringifyNullable(platform.title),
                             description: 'Человеческое название платформы для UI и чтения настроек.',
-                            defaultExample: defaultPlatform.title,
-                            helperText: 'Одно значение.',
+                            defaultExample: defaultPlatform.title ?? 'null',
+                            helperText: 'Одно значение или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    title: value,
+                                    title: parseNullableString(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-enabled`,
+                            key: `${platformIndex}-enabled`,
                             label: 'Включено',
                             value: String(platform.enabled),
                             description: 'Флаг активности платформы. `true` участвует в матчинге, `false` временно отключает правило.',
@@ -238,110 +241,118 @@ const SettingsScreenContent = () => {
                                 })),
                         },
                         {
-                            key: `${platform.id}-resumePagePatterns`,
+                            key: `${platformIndex}-resumePagePatterns`,
                             label: 'Паттерны страниц резюме',
-                            value: stringifyLines(platform.resumePagePatterns),
+                            value: stringifyNullableLines(platform.resumePagePatterns),
                             description: 'Один или несколько regex-паттернов для определения страниц резюме.',
-                            defaultExample: stringifyLines(defaultPlatform.resumePagePatterns),
-                            rows: Math.max(3, platform.resumePagePatterns.length + 1),
-                            helperText: 'Можно указать несколько значений. Каждый паттерн с новой строки.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.resumePagePatterns),
+                            rows: Math.max(3, (platform.resumePagePatterns?.length ?? 0) + 1),
+                            helperText: 'Каждый паттерн с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    resumePagePatterns: parseLinesForEdit(value),
+                                    resumePagePatterns: parseNullableLinesForEdit(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-resumeContentSelectors`,
+                            key: `${platformIndex}-resumeContentSelectors`,
                             label: 'Селекторы контента резюме',
-                            value: stringifyLines(platform.resumeContentSelectors),
+                            value: stringifyNullableLines(platform.resumeContentSelectors),
                             description: 'Один или несколько CSS-селекторов контейнера с текстом резюме. Пробуем по очереди.',
-                            defaultExample: stringifyLines(defaultPlatform.resumeContentSelectors),
-                            rows: Math.max(3, platform.resumeContentSelectors.length + 1),
-                            helperText: 'Можно указать несколько значений. Каждый селектор с новой строки.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.resumeContentSelectors),
+                            rows: Math.max(3, (platform.resumeContentSelectors?.length ?? 0) + 1),
+                            helperText: 'Каждый селектор с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    resumeContentSelectors: parseLinesForEdit(value),
+                                    resumeContentSelectors: parseNullableLinesForEdit(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-vacancyPagePatterns`,
+                            key: `${platformIndex}-vacancyPagePatterns`,
                             label: 'Паттерны страниц вакансий',
-                            value: stringifyLines(platform.vacancyPagePatterns),
+                            value: stringifyNullableLines(platform.vacancyPagePatterns),
                             description: 'Regex-паттерны для vacancy-flow: страница вакансии и отклик/опрос.',
-                            defaultExample: stringifyLines(defaultPlatform.vacancyPagePatterns),
-                            rows: Math.max(3, platform.vacancyPagePatterns.length + 1),
-                            helperText: 'Можно указать несколько значений. Каждый паттерн с новой строки.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.vacancyPagePatterns),
+                            rows: Math.max(3, (platform.vacancyPagePatterns?.length ?? 0) + 1),
+                            helperText: 'Каждый паттерн с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    vacancyPagePatterns: parseLinesForEdit(value),
+                                    vacancyPagePatterns: parseNullableLinesForEdit(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-vacancyParsePagePatterns`,
+                            key: `${platformIndex}-vacancyParsePagePatterns`,
                             label: 'Паттерны страниц парсинга вакансии',
-                            value: stringifyLines(platform.vacancyParsePagePatterns),
+                            value: stringifyNullableLines(platform.vacancyParsePagePatterns),
                             description:
                                 'Regex-паттерны страниц, с которых читаем текст вакансии для генерации сопроводительного.',
-                            defaultExample: stringifyLines(defaultPlatform.vacancyParsePagePatterns),
-                            rows: Math.max(3, platform.vacancyParsePagePatterns.length + 1),
-                            helperText: 'Обычно только страница вакансии, без экрана отклика.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.vacancyParsePagePatterns),
+                            rows: Math.max(3, (platform.vacancyParsePagePatterns?.length ?? 0) + 1),
+                            helperText: 'Каждый паттерн с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    vacancyParsePagePatterns: parseLinesForEdit(value),
+                                    vacancyParsePagePatterns: parseNullableLinesForEdit(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-vacancyParseContentSelectors`,
+                            key: `${platformIndex}-vacancyParseContentSelectors`,
                             label: 'Селекторы якоря контента вакансии',
-                            value: stringifyLines(platform.vacancyParseContentSelectors),
+                            value: stringifyNullableLines(platform.vacancyParseContentSelectors),
                             description:
-                                'Опционально. CSS-селекторы контейнера с описанием вакансии. Если пусто — парсинг по якорю недоступен.',
-                            defaultExample: stringifyLines(defaultPlatform.vacancyParseContentSelectors),
-                            rows: Math.max(3, platform.vacancyParseContentSelectors.length + 1),
-                            helperText: 'Опционально. Можно оставить пустым. Каждый селектор с новой строки.',
+                                'CSS-селекторы контейнера с описанием вакансии. Если null — парсинг по якорю недоступен.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.vacancyParseContentSelectors),
+                            rows: Math.max(3, (platform.vacancyParseContentSelectors?.length ?? 0) + 1),
+                            helperText: 'Каждый селектор с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    vacancyParseContentSelectors: parseLinesForEdit(value),
+                                    vacancyParseContentSelectors: parseNullableLinesForEdit(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-vacancyLetterInputSelectors`,
+                            key: `${platformIndex}-vacancyLetterInputSelectors`,
                             label: 'Селекторы поля сопроводительного',
-                            value: stringifyLines(platform.vacancyLetterInputSelectors),
+                            value: stringifyNullableLines(platform.vacancyLetterInputSelectors),
                             description: 'CSS-селекторы поля ввода сопроводительного письма на всех vacancy-related страницах.',
-                            defaultExample: stringifyLines(defaultPlatform.vacancyLetterInputSelectors),
-                            rows: Math.max(3, platform.vacancyLetterInputSelectors.length + 1),
-                            helperText: 'Можно указать несколько значений. Каждый селектор с новой строки.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.vacancyLetterInputSelectors),
+                            rows: Math.max(3, (platform.vacancyLetterInputSelectors?.length ?? 0) + 1),
+                            helperText: 'Каждый селектор с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    vacancyLetterInputSelectors: parseLinesForEdit(value),
+                                    vacancyLetterInputSelectors: parseNullableLinesForEdit(value),
                                 })),
                         },
                         {
-                            key: `${platform.id}-vacancyLetterInjectSelectors`,
+                            key: `${platformIndex}-vacancyLetterInjectSelectors`,
                             label: 'Селекторы контейнера инжекта кнопки',
-                            value: stringifyLines(platform.vacancyLetterInjectSelectors),
+                            value: stringifyNullableLines(platform.vacancyLetterInjectSelectors),
                             description:
-                                'Опционально. Куда монтировать кнопку. Сначала ищем предка найденного поля, затем связанный контейнер, затем единственный элемент на странице. Если пусто — рядом с полем.',
-                            defaultExample: stringifyLines(defaultPlatform.vacancyLetterInjectSelectors),
-                            rows: Math.max(3, platform.vacancyLetterInjectSelectors.length + 1),
-                            helperText:
-                                'Опционально. Можно оставить пустым. Каждый селектор с новой строки.',
+                                'Куда монтировать кнопку. Если null — рядом с полем сопроводительного.',
+                            defaultExample: stringifyNullableLines(defaultPlatform.vacancyLetterInjectSelectors),
+                            rows: Math.max(3, (platform.vacancyLetterInjectSelectors?.length ?? 0) + 1),
+                            helperText: 'Каждый селектор с новой строки или null.',
                             onChange: (value) =>
                                 updateContentPlatform(platformIndex, (currentPlatform) => ({
                                     ...currentPlatform,
-                                    vacancyLetterInjectSelectors: parseLinesForEdit(value),
+                                    vacancyLetterInjectSelectors: parseNullableLinesForEdit(value),
                                 })),
                         },
                     ]}
                 />
             ))}
+
+            <button
+                type="button"
+                onClick={addContentPlatform}
+                disabled={isSaving}
+                className="rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                Добавить платформу
+            </button>
 
             <div className="flex flex-col gap-3">
                 <button

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppStatus } from '@/components/Status'
 import { healthCheckOpenAiCompatible } from '@/lib/api/llm/openaiCompatible'
-import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
+import { DEFAULT_CONTENT_CONFIG, createDefaultContentPlatform } from '@/lib/configs/content/config'
 import { loadContentConfig, saveContentConfig } from '@/lib/configs/content/storage'
 import {
     DEFAULT_COVER_LETTER_CONFIG,
@@ -133,6 +133,20 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         }))
     }
 
+    function removeContentPlatform(platformIndex: number) {
+        setContentConfig((currentConfig) => ({
+            ...currentConfig,
+            platforms: currentConfig.platforms.filter((_, index) => index !== platformIndex),
+        }))
+    }
+
+    function addContentPlatform() {
+        setContentConfig((currentConfig) => ({
+            ...currentConfig,
+            platforms: [...currentConfig.platforms, createDefaultContentPlatform()],
+        }))
+    }
+
     async function handleSaveConfigs() {
         setIsSaving(true)
         await setStatus('Сохраняю конфиги...', 'loading')
@@ -225,6 +239,8 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         updateResumeParsingConfig,
         updateContentConfig,
         updateContentPlatform,
+        addContentPlatform,
+        removeContentPlatform,
         handleSaveConfigs,
         handleResetConfigs,
         handleLlmHealthCheck,

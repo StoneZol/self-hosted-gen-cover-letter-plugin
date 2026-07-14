@@ -8,7 +8,7 @@ export const MainScreen = () => {
 
     return (
         <div className="flex flex-col gap-4">
-            <ScreenHeader title="Главная" showSettings showGuide />
+            <ScreenHeader title="Главная" showSettings showGuide showChat />
 
             <section className="rounded-xl border border-border bg-card p-4">
                 <p className="text-sm text-muted-foreground">

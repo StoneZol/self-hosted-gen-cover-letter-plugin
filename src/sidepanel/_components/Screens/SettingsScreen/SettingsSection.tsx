@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { cn } from "@/lib/helpers/cn"
+import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 import { SettingsFieldPopover } from './SettingsFieldPopover'
 
 export type TextareaField = {
@@ -19,6 +20,8 @@ type SettingsSectionProps = {
     description: string
     fields: TextareaField[]
     defaultCollapsed?: boolean
+    onDelete?: () => void
+    deleteLabel?: string
 }
 
 export const SettingsSection = ({
@@ -26,8 +29,14 @@ export const SettingsSection = ({
     description,
     fields,
     defaultCollapsed = false,
+    onDelete,
+    deleteLabel = 'Удалить',
 }: SettingsSectionProps) => {
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
+
+    const headerActions = onDelete ? (
+        <ConfirmDeleteButton label={deleteLabel} onConfirm={onDelete} />
+    ) : null
 
     const content = (
         <div className="mt-4 flex flex-col gap-3">
@@ -61,6 +70,16 @@ export const SettingsSection = ({
         </div>
     )
 
+    const sectionHeader = (
+        <div className="flex items-start justify-between gap-3">
+            <div>
+                <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+            </div>
+            {headerActions}
+        </div>
+    )
+
     if (defaultCollapsed) {
         return (
             <details
@@ -74,14 +93,17 @@ export const SettingsSection = ({
                         setIsCollapsed((currentValue) => !currentValue)
                     }}
                 >
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
                             <h2 className="text-sm font-semibold text-foreground">{title}</h2>
                             <p className="mt-2 text-sm text-muted-foreground">{description}</p>
                         </div>
-                        <span className="text-xs font-medium text-primary">
-                            {isCollapsed ? 'Развернуть' : 'Свернуть'}
-                        </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                            {headerActions}
+                            <span className="text-xs font-medium text-primary">
+                                {isCollapsed ? 'Развернуть' : 'Свернуть'}
+                            </span>
+                        </div>
                     </div>
                 </summary>
                 {content}
@@ -91,8 +113,7 @@ export const SettingsSection = ({
 
     return (
         <section className="rounded-xl border border-border bg-card p-4">
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+            {sectionHeader}
             {content}
         </section>
     )

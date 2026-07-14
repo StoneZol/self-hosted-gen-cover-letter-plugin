@@ -1,5 +1,18 @@
 import type { ContentConfig, ContentPlatform } from '@/lib/types/content/types'
 
+export const DEFAULT_NEW_CONTENT_PLATFORM: ContentPlatform = {
+    id: null,
+    title: null,
+    enabled: true,
+    resumePagePatterns: null,
+    resumeContentSelectors: null,
+    vacancyPagePatterns: null,
+    vacancyParsePagePatterns: null,
+    vacancyParseContentSelectors: null,
+    vacancyLetterInputSelectors: null,
+    vacancyLetterInjectSelectors: null,
+}
+
 export const DEFAULT_CONTENT_CONFIG: ContentConfig = {
     platforms: [
         {
@@ -26,11 +39,25 @@ export const DEFAULT_CONTENT_CONFIG: ContentConfig = {
     ],
 }
 
+export function createDefaultContentPlatform(): ContentPlatform {
+    return { ...DEFAULT_NEW_CONTENT_PLATFORM }
+}
+
 export const INJECTED_WIDGET_SELECTOR = '#hh-free-cheat-save-resume'
 export const INJECTED_COVER_LETTER_WIDGET_SELECTOR = '#hh-free-cheat-generate-cover-letter'
 
-function matchesAnyPattern(url: string, patterns: string[]): boolean {
-    return patterns.some((pattern) => new RegExp(pattern, 'i').test(url))
+function asPatternList(patterns: string[] | null | undefined): string[] {
+    return patterns ?? []
+}
+
+function matchesAnyPattern(url: string, patterns: string[] | null | undefined): boolean {
+    const normalizedPatterns = asPatternList(patterns)
+
+    if (normalizedPatterns.length === 0) {
+        return false
+    }
+
+    return normalizedPatterns.some((pattern) => new RegExp(pattern, 'i').test(url))
 }
 
 function isElementVisible(element: HTMLElement): boolean {
@@ -124,12 +151,13 @@ export function getResumeContentElementFromConfig(
     root: ParentNode = document,
 ): HTMLElement | null {
     const platform = getMatchingResumePlatform(url, config)
+    const selectors = asPatternList(platform?.resumeContentSelectors)
 
-    if (!platform) {
+    if (selectors.length === 0) {
         return null
     }
 
-    for (const selector of platform.resumeContentSelectors) {
+    for (const selector of selectors) {
         const element = root.querySelector<HTMLElement>(selector)
 
         if (element) {
@@ -146,12 +174,13 @@ export function getVacancyContentElementFromConfig(
     root: ParentNode = document,
 ): HTMLElement | null {
     const platform = getMatchingVacancyParsePlatform(url, config)
+    const selectors = asPatternList(platform?.vacancyParseContentSelectors)
 
-    if (!platform || platform.vacancyParseContentSelectors.length === 0) {
+    if (selectors.length === 0) {
         return null
     }
 
-    for (const selector of platform.vacancyParseContentSelectors) {
+    for (const selector of selectors) {
         const element = root.querySelector<HTMLElement>(selector)
 
         if (element) {
@@ -168,7 +197,7 @@ export function hasVacancyParseContentSelectors(
 ): boolean {
     const platform = getMatchingVacancyParsePlatform(url, config)
 
-    return Boolean(platform && platform.vacancyParseContentSelectors.length > 0)
+    return asPatternList(platform?.vacancyParseContentSelectors).length > 0
 }
 
 export function getVacancyLetterInputFromConfig(
@@ -177,12 +206,13 @@ export function getVacancyLetterInputFromConfig(
     root: ParentNode = document,
 ): HTMLElement | null {
     const platform = getMatchingVacancyPlatform(url, config)
+    const selectors = asPatternList(platform?.vacancyLetterInputSelectors)
 
-    if (!platform) {
+    if (selectors.length === 0) {
         return null
     }
 
-    for (const selector of platform.vacancyLetterInputSelectors) {
+    for (const selector of selectors) {
         const elements = Array.from(root.querySelectorAll<HTMLElement>(selector))
         const element = pickBestMatchedElement(elements)
 
@@ -200,7 +230,7 @@ export function hasVacancyLetterInjectSelectors(
 ): boolean {
     const platform = getMatchingVacancyPlatform(url, config)
 
-    return Boolean(platform && platform.vacancyLetterInjectSelectors.length > 0)
+    return asPatternList(platform?.vacancyLetterInjectSelectors).length > 0
 }
 
 function isInjectTargetRelatedToLetterInput(
@@ -218,13 +248,14 @@ export function getVacancyLetterInjectTargetFromConfig(
     letterInput?: HTMLElement | null,
 ): HTMLElement | null {
     const platform = getMatchingVacancyPlatform(url, config)
+    const selectors = asPatternList(platform?.vacancyLetterInjectSelectors)
 
-    if (!platform || platform.vacancyLetterInjectSelectors.length === 0) {
+    if (selectors.length === 0) {
         return null
     }
 
     if (letterInput) {
-        for (const selector of platform.vacancyLetterInjectSelectors) {
+        for (const selector of selectors) {
             const closestTarget = letterInput.closest<HTMLElement>(selector)
 
             if (closestTarget) {
@@ -232,7 +263,7 @@ export function getVacancyLetterInjectTargetFromConfig(
             }
         }
 
-        for (const selector of platform.vacancyLetterInjectSelectors) {
+        for (const selector of selectors) {
             const relatedTargets = Array.from(root.querySelectorAll<HTMLElement>(selector)).filter(
                 (element) => element.contains(letterInput),
             )
@@ -245,7 +276,7 @@ export function getVacancyLetterInjectTargetFromConfig(
         }
     }
 
-    for (const selector of platform.vacancyLetterInjectSelectors) {
+    for (const selector of selectors) {
         const elements = root.querySelectorAll<HTMLElement>(selector)
 
         if (elements.length !== 1) {

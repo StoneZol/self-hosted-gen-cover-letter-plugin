@@ -1,16 +1,19 @@
 import { z } from 'zod'
 
+const nullableString = z.string().nullable()
+const nullableStringArray = z.array(z.string()).nullable()
+
 export const contentPlatformSchema = z.object({
-    id: z.string(),
-    title: z.string(),
+    id: nullableString,
+    title: nullableString,
     enabled: z.boolean(),
-    resumePagePatterns: z.array(z.string()),
-    resumeContentSelectors: z.array(z.string()),
-    vacancyPagePatterns: z.array(z.string()),
-    vacancyParsePagePatterns: z.array(z.string()),
-    vacancyParseContentSelectors: z.array(z.string()),
-    vacancyLetterInputSelectors: z.array(z.string()),
-    vacancyLetterInjectSelectors: z.array(z.string()),
+    resumePagePatterns: nullableStringArray,
+    resumeContentSelectors: nullableStringArray,
+    vacancyPagePatterns: nullableStringArray,
+    vacancyParsePagePatterns: nullableStringArray,
+    vacancyParseContentSelectors: nullableStringArray,
+    vacancyLetterInputSelectors: nullableStringArray,
+    vacancyLetterInjectSelectors: nullableStringArray,
 })
 export type ContentPlatform = z.infer<typeof contentPlatformSchema>
 

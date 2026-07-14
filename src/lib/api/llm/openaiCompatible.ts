@@ -103,5 +103,12 @@ export async function generateChatCompletion(
 }
 
 export function extractAssistantText(response: ChatCompletionResponse): string {
-    return response?.choices?.[0]?.message.content?.trim() ?? ''
+    const message = response?.choices?.[0]?.message
+    const content = message?.content?.trim() ?? ''
+
+    if (content) {
+        return content
+    }
+
+    return message?.reasoning_content?.trim() ?? ''
 }

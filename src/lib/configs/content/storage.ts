@@ -8,18 +8,27 @@ type LegacyContentConfig = {
     resumeContentSelector?: string
 }
 
-function normalizeStringLines(lines: string[] | undefined, fallback: string[]): string[] {
-    const normalized = lines?.map((line) => line.trim()).filter(Boolean) ?? []
+function normalizeNullableString(value: string | null | undefined): string | null {
+    if (value === null || value === undefined) {
+        return null
+    }
 
-    return normalized.length > 0 ? normalized : fallback
+    const trimmed = value.trim()
+
+    return trimmed || null
 }
 
-function normalizeOptionalStringLines(lines: string[] | undefined): string[] {
-    return lines?.map((line) => line.trim()).filter(Boolean) ?? []
+function normalizeNullableStringLines(lines: string[] | null | undefined): string[] | null {
+    if (lines === null || lines === undefined) {
+        return null
+    }
+
+    const normalized = lines.map((line) => line.trim()).filter(Boolean)
+
+    return normalized.length > 0 ? normalized : null
 }
 
 function normalizePlatform(platform: Partial<ContentPlatform>): ContentPlatform {
-    const defaultPlatform = DEFAULT_CONTENT_CONFIG.platforms[0]
     const legacyVacancyPatterns = [
         ...(platform.vacancyPagePatterns ?? []),
         ...(('vacancyResponsePagePatterns' in platform
@@ -32,38 +41,42 @@ function normalizePlatform(platform: Partial<ContentPlatform>): ContentPlatform 
             : undefined) ?? platform.vacancyLetterInputSelectors
 
     return {
-        id: platform.id?.trim() || defaultPlatform.id,
-        title: platform.title?.trim() || defaultPlatform.title,
+        id: normalizeNullableString(platform.id),
+        title: normalizeNullableString(platform.title),
         enabled: platform.enabled ?? true,
-        resumePagePatterns: normalizeStringLines(
-            platform.resumePagePatterns,
-            defaultPlatform.resumePagePatterns,
+        resumePagePatterns: normalizeNullableStringLines(platform.resumePagePatterns),
+        resumeContentSelectors: normalizeNullableStringLines(platform.resumeContentSelectors),
+        vacancyPagePatterns: normalizeNullableStringLines(
+            legacyVacancyPatterns.length > 0 ? legacyVacancyPatterns : platform.vacancyPagePatterns,
         ),
-        resumeContentSelectors: normalizeStringLines(
-            platform.resumeContentSelectors,
-            defaultPlatform.resumeContentSelectors,
+        vacancyParsePagePatterns: normalizeNullableStringLines(platform.vacancyParsePagePatterns),
+        vacancyParseContentSelectors: normalizeNullableStringLines(platform.vacancyParseContentSelectors),
+        vacancyLetterInputSelectors: normalizeNullableStringLines(
+            legacyVacancySelectors ?? platform.vacancyLetterInputSelectors,
         ),
-        vacancyPagePatterns: normalizeStringLines(
-            legacyVacancyPatterns,
-            defaultPlatform.vacancyPagePatterns,
-        ),
-        vacancyParsePagePatterns: normalizeStringLines(
-            platform.vacancyParsePagePatterns,
-            defaultPlatform.vacancyParsePagePatterns,
-        ),
-        vacancyParseContentSelectors:
-            platform.vacancyParseContentSelectors !== undefined
-                ? normalizeOptionalStringLines(platform.vacancyParseContentSelectors)
-                : defaultPlatform.vacancyParseContentSelectors,
-        vacancyLetterInputSelectors: normalizeStringLines(
-            legacyVacancySelectors,
-            defaultPlatform.vacancyLetterInputSelectors,
-        ),
-        vacancyLetterInjectSelectors:
-            platform.vacancyLetterInjectSelectors !== undefined
-                ? normalizeOptionalStringLines(platform.vacancyLetterInjectSelectors)
-                : defaultPlatform.vacancyLetterInjectSelectors,
+        vacancyLetterInjectSelectors: normalizeNullableStringLines(platform.vacancyLetterInjectSelectors),
     }
+}
+
+function normalizeLegacyPlatform(storedConfig: LegacyContentConfig): ContentPlatform {
+    const defaultPlatform = DEFAULT_CONTENT_CONFIG.platforms[0]
+
+    return normalizePlatform({
+        id: defaultPlatform.id,
+        title: defaultPlatform.title,
+        enabled: true,
+        resumePagePatterns: [
+            storedConfig.resumePagePattern || defaultPlatform.resumePagePatterns?.[0] || '',
+        ].filter(Boolean),
+        resumeContentSelectors: [
+            storedConfig.resumeContentSelector || defaultPlatform.resumeContentSelectors?.[0] || '',
+        ].filter(Boolean),
+        vacancyPagePatterns: defaultPlatform.vacancyPagePatterns,
+        vacancyParsePagePatterns: defaultPlatform.vacancyParsePagePatterns,
+        vacancyParseContentSelectors: defaultPlatform.vacancyParseContentSelectors,
+        vacancyLetterInputSelectors: defaultPlatform.vacancyLetterInputSelectors,
+        vacancyLetterInjectSelectors: defaultPlatform.vacancyLetterInjectSelectors,
+    })
 }
 
 function normalizeContentConfig(
@@ -71,31 +84,19 @@ function normalizeContentConfig(
 ): ContentConfig {
     if (storedConfig && 'platforms' in storedConfig && Array.isArray(storedConfig.platforms)) {
         return {
-            platforms: storedConfig.platforms.map(normalizePlatform),
+            platforms: storedConfig.platforms.map((platform) => normalizePlatform(platform)),
         }
     }
 
     if (storedConfig && ('resumePagePattern' in storedConfig || 'resumeContentSelector' in storedConfig)) {
-        const defaultPlatform = DEFAULT_CONTENT_CONFIG.platforms[0]
-
         return {
-            platforms: [
-                normalizePlatform({
-                    id: defaultPlatform.id,
-                    title: defaultPlatform.title,
-                    enabled: true,
-                    resumePagePatterns: [
-                        storedConfig.resumePagePattern || defaultPlatform.resumePagePatterns[0],
-                    ],
-                    resumeContentSelectors: [
-                        storedConfig.resumeContentSelector || defaultPlatform.resumeContentSelectors[0],
-                    ],
-                }),
-            ],
+            platforms: [normalizeLegacyPlatform(storedConfig)],
         }
     }
 
-    return DEFAULT_CONTENT_CONFIG
+    return {
+        platforms: DEFAULT_CONTENT_CONFIG.platforms.map((platform) => normalizePlatform(platform)),
+    }
 }
 
 export async function loadContentConfig(): Promise<ContentConfig> {
@@ -110,3 +111,5 @@ export async function saveContentConfig(config: ContentConfig): Promise<void> {
         [STORAGE_KEY]: normalizeContentConfig(config),
     })
 }
+
+export { STORAGE_KEY as CONTENT_CONFIG_STORAGE_KEY }
