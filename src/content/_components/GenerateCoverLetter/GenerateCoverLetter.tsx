@@ -4,7 +4,8 @@ import type { GenerateCoverLetterProps } from './GenerateCoverLetter.types'
 import styles from './GenerateCoverLetter.module.css'
 
 const GenerateCoverLetter = (_props: GenerateCoverLetterProps) => {
-    const { handleGenerateCoverLetter, isGenerating } = useGenerateCoverLetterHook()
+    const { handleGenerateCoverLetter, hasVacancy, isGenerating } = useGenerateCoverLetterHook()
+    const isDisabled = isGenerating || !hasVacancy
 
     return (
         <ContentWrapper>
@@ -13,7 +14,13 @@ const GenerateCoverLetter = (_props: GenerateCoverLetterProps) => {
                     type="button"
                     onClick={handleGenerateCoverLetter}
                     className={styles.button}
-                    disabled={isGenerating}
+                    disabled={isDisabled}
+                    data-generating={isGenerating ? 'true' : undefined}
+                    title={
+                        !hasVacancy
+                            ? 'Сначала откройте вакансию — текст должен появиться в sidepanel'
+                            : undefined
+                    }
                 >
                     {isGenerating ? 'Генерирую...' : 'Сгенерировать сопровод'}
                 </button>

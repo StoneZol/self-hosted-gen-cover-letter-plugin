@@ -5,12 +5,44 @@ import {
     COVER_LETTER_GENERATE_JOB_STORAGE_KEY,
     enqueueCoverLetterGenerateJob,
 } from '@/lib/configs/jobs/coverLetterGenerateJobStorage'
+import { VACANCY_PAGE_DRAFT_STORAGE_KEY } from '@/lib/configs/vacancy/draftStorage'
+import { LAST_VACANCY_STORAGE_KEY } from '@/lib/configs/vacancy/lastVacancyStorage'
 import { watchExtensionJob } from '@/lib/extension/watchExtensionJob'
 import type { CoverLetterGenerateJob } from '@/lib/types/jobs/coverLetterGenerateJob'
+import { resolveVacancyForGeneration } from '@/lib/vacancy/resolveVacancyForGeneration'
 import { fillVacancyLetterInput } from '../../vacancyLetterInput'
 
 const useGenerateCoverLetterHook = () => {
     const [isGenerating, setIsGenerating] = useState(false)
+    const [hasVacancy, setHasVacancy] = useState(false)
+
+    const refreshVacancyAvailability = useCallback(async () => {
+        const vacancy = await resolveVacancyForGeneration(window.location.href)
+        setHasVacancy(vacancy !== null)
+    }, [])
+
+    useEffect(() => {
+        void refreshVacancyAvailability()
+
+        function handleStorageChange(
+            changes: Record<string, chrome.storage.StorageChange>,
+            areaName: string,
+        ) {
+            if (areaName !== 'local') {
+                return
+            }
+
+            if (changes[LAST_VACANCY_STORAGE_KEY] || changes[VACANCY_PAGE_DRAFT_STORAGE_KEY]) {
+                void refreshVacancyAvailability()
+            }
+        }
+
+        chrome.storage.onChanged.addListener(handleStorageChange)
+
+        return () => {
+            chrome.storage.onChanged.removeListener(handleStorageChange)
+        }
+    }, [refreshVacancyAvailability])
 
     const jobWatcher = useMemo(
         () =>
@@ -62,7 +94,7 @@ const useGenerateCoverLetterHook = () => {
     useEffect(() => jobWatcher.subscribe(), [jobWatcher])
 
     const handleGenerateCoverLetter = useCallback(async () => {
-        if (isGenerating) {
+        if (isGenerating || !hasVacancy) {
             return
         }
 
@@ -85,10 +117,11 @@ const useGenerateCoverLetterHook = () => {
             })
             setIsGenerating(false)
         }
-    }, [isGenerating, jobWatcher])
+    }, [hasVacancy, isGenerating, jobWatcher])
 
     return {
         handleGenerateCoverLetter,
+        hasVacancy,
         isGenerating,
     }
 }
