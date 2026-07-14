@@ -1,6 +1,7 @@
 import { saveContentObserverDebug } from '@/lib/configs/app/contentObserverStorage'
 import { resolveAppPageInfo } from '@/lib/hh/page'
 import type { ContentObserverDebug, VacancyObserverStatus } from '@/lib/types/app/contentObserver'
+import { getContentConfig } from './contentConfigRuntime'
 
 type VacancyObserverSnapshot = {
     status: VacancyObserverStatus
@@ -11,7 +12,11 @@ type VacancyObserverSnapshot = {
 }
 
 export async function publishVacancyObserverState(snapshot: VacancyObserverSnapshot): Promise<void> {
-    const pageInfo = resolveAppPageInfo(window.location.href, document.title)
+    const pageInfo = resolveAppPageInfo(
+        window.location.href,
+        document.title,
+        getContentConfig(),
+    )
 
     const debug: ContentObserverDebug = {
         url: window.location.href,

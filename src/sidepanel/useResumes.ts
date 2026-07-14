@@ -7,6 +7,7 @@ import {
     SELECTED_RESUME_ID_STORAGE_KEY,
 } from '@/lib/configs/resume/storage'
 import type { Resume, ResumeSelectionState } from '@/lib/types/resume/types'
+import { formatResumeDisplayTitle } from '@/lib/resume/formatResumeDisplayTitle'
 
 const EMPTY_SELECTION: ResumeSelectionState = {
     resumes: [],
@@ -66,7 +67,7 @@ export function useResumes() {
                 return false
             }
 
-            const confirmed = window.confirm(`Удалить резюме «${resumeToDelete.title}»?`)
+            const confirmed = window.confirm(`Удалить резюме «${formatResumeDisplayTitle(resumeToDelete)}»?`)
 
             if (!confirmed) {
                 return false

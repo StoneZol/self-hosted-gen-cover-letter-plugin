@@ -2,6 +2,7 @@ import { generateChatCompletion, extractAssistantText } from '@/lib/api/llm/open
 import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import { resumeSchema, type Resume } from '@/lib/types/resume/types'
 import { buildResumeParsingMessages } from './buildResumeParsingMessages'
+import { deriveResumeSourceFromUrl } from './deriveResumeSourceFromUrl'
 import { parseResumeJsonFromAssistant } from './parseResumeJson'
 import { sanitizeResumeSelfAbout } from './sanitizeResumeSelfAbout'
 
@@ -35,9 +36,11 @@ export async function parseResumeWithLlm({
     }
 
     const parsedResume = resumeSchema.parse(parseResumeJsonFromAssistant(assistantText))
+    const source = await deriveResumeSourceFromUrl(sourceUrl)
 
     return resumeSchema.parse({
         ...parsedResume,
+        source,
         selfAbout: sanitizeResumeSelfAbout(parsedResume.selfAbout),
     })
 }

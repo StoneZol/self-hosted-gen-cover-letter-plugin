@@ -1,5 +1,6 @@
 import { ResumePicker } from '../../ResumePicker'
 import { ScreenHeader } from '../../ScreenHeader'
+import { formatResumeDisplayTitle } from '@/lib/resume/formatResumeDisplayTitle'
 import { useResumes } from '@/sidepanel/useResumes'
 
 export const ResumeScreen = () => {
@@ -19,7 +20,9 @@ export const ResumeScreen = () => {
             ) : selectedResume ? (
                 <div className="flex flex-col gap-3">
                     <section className="rounded-xl border border-border bg-card p-4">
-                        <h2 className="text-base font-semibold text-foreground">{selectedResume.title}</h2>
+                        <h2 className="text-base font-semibold text-foreground">
+                            {formatResumeDisplayTitle(selectedResume)}
+                        </h2>
                         <p className="mt-2 text-sm text-muted-foreground">
                             Язык: {selectedResume.language}
                         </p>

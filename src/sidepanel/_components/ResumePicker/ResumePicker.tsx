@@ -1,4 +1,5 @@
 import { ChevronDown, ExternalLink, Trash2 } from 'lucide-react'
+import { formatResumeDisplayTitle } from '@/lib/resume/formatResumeDisplayTitle'
 import { useResumes } from '@/sidepanel/useResumes'
 
 type ResumePickerProps = {
@@ -55,7 +56,7 @@ export function ResumePicker({ action, onOpen }: ResumePickerProps) {
                             aria-hidden
                             className="pointer-events-none min-h-11 rounded-lg border border-border bg-background px-3 py-2 pr-10 text-sm leading-snug text-foreground break-words whitespace-normal"
                         >
-                            {selectedResume?.title ?? 'Нет сохранённых резюме'}
+                            {selectedResume ? formatResumeDisplayTitle(selectedResume) : 'Нет сохранённых резюме'}
                         </div>
 
                         <ChevronDown
@@ -70,7 +71,7 @@ export function ResumePicker({ action, onOpen }: ResumePickerProps) {
                         >
                             {resumes.map((resume) => (
                                 <option key={resume.id} value={resume.id} className="text-black">
-                                    {resume.title}
+                                    {formatResumeDisplayTitle(resume)}
                                 </option>
                             ))}
                         </select>

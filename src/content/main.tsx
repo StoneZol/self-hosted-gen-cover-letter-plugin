@@ -1,6 +1,9 @@
 import { SYNC_VACANCY_DRAFT_MESSAGE } from '@/lib/extension/contentMessages'
-import { isResumePage, isVacancyPage } from '@/lib/hh/page'
-import { initContentConfig } from './contentConfigRuntime'
+import {
+    getMatchingResumePlatform,
+    getMatchingVacancyPlatform,
+} from '@/lib/configs/content/config'
+import { getContentConfig, initContentConfig, subscribeContentConfig } from './contentConfigRuntime'
 import {
     mountResumeScenario,
     mountVacancyResponseScenario,
@@ -14,13 +17,15 @@ import {
 import { watchUrlChanges } from './watchUrlChanges'
 
 function syncContentScenarios(url: string): void {
+    const config = getContentConfig()
+
     syncVacancyPageDraftForUrl(url)
 
-    if (isResumePage(url)) {
+    if (getMatchingResumePlatform(url, config)) {
         mountResumeScenario()
     }
 
-    if (isVacancyPage(url)) {
+    if (getMatchingVacancyPlatform(url, config)) {
         mountVacancyResponseScenario()
         return
     }
@@ -44,4 +49,5 @@ void initContentConfig().then(() => {
     watchVacancyPageDraftVisibility()
     syncContentScenarios(window.location.href)
     watchUrlChanges(syncContentScenarios)
+    subscribeContentConfig(() => syncContentScenarios(window.location.href))
 })

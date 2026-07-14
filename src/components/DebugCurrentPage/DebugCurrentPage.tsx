@@ -5,6 +5,10 @@ import {
     saveAppPageInfo,
 } from '@/lib/configs/app/pageStorage'
 import {
+    CONTENT_CONFIG_STORAGE_KEY,
+    loadContentConfig,
+} from '@/lib/configs/content/storage'
+import {
     CONTENT_OBSERVER_DEBUG_STORAGE_KEY,
     loadContentObserverDebug,
 } from '@/lib/configs/app/contentObserverStorage'
@@ -13,12 +17,15 @@ import type { AppPageInfo } from '@/lib/types/app/page'
 import type { ContentObserverDebug } from '@/lib/types/app/contentObserver'
 
 async function getActiveTabPageInfo(): Promise<AppPageInfo> {
-    const [activeTab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-    })
+    const [[activeTab], contentConfig] = await Promise.all([
+        chrome.tabs.query({
+            active: true,
+            currentWindow: true,
+        }),
+        loadContentConfig(),
+    ])
 
-    return resolveAppPageInfo(activeTab?.url ?? '', activeTab?.title ?? '')
+    return resolveAppPageInfo(activeTab?.url ?? '', activeTab?.title ?? '', contentConfig)
 }
 
 async function getActiveTabUrl(): Promise<string> {
@@ -75,6 +82,10 @@ export function DebugCurrentPage() {
                     | ContentObserverDebug
                     | undefined
                 setObserverDebug(nextObserverDebug ?? null)
+            }
+
+            if (changes[CONTENT_CONFIG_STORAGE_KEY]) {
+                void syncCurrentPage()
             }
         }
 

@@ -1,4 +1,5 @@
 import useScreenStore from '@/sidepanel/store'
+import { DebugCurrentPage } from '@/components/DebugCurrentPage'
 import { ChatScreen } from '../Screens/ChatScreen'
 import { GuideScreen } from '../Screens/GuideScreen'
 import { MainScreen } from '../Screens/MainScreen'
@@ -10,16 +11,36 @@ const Navigator = () => {
 
     switch (screen) {
         case 'settings':
-            return <SettingsScreen />
+            return (
+                <>
+                    <SettingsScreen />
+                    <DebugCurrentPage />
+                </>
+            )
         case 'resume':
-            return <ResumeScreen />
+            return (
+                <>
+                    <ResumeScreen />
+                    <DebugCurrentPage />
+                </>
+            )
         case 'guide':
-            return <GuideScreen />
+            return (
+                <>
+                    <GuideScreen />
+                    <DebugCurrentPage />
+                </>
+            )
         case 'chat':
             return <ChatScreen />
         case 'main':
         default:
-            return <MainScreen />
+            return (
+                <>
+                    <MainScreen />
+                    <DebugCurrentPage />
+                </>
+            )
     }
 }
 

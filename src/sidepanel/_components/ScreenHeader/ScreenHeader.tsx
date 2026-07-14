@@ -7,7 +7,6 @@ type ScreenHeaderProps = {
     showBack?: boolean
     showSettings?: boolean
     showGuide?: boolean
-    showChat?: boolean
     className?: string
 }
 
@@ -16,15 +15,16 @@ const ScreenHeader = ({
     showBack = false,
     showSettings = false,
     showGuide = false,
-    showChat = false,
     className,
 }: ScreenHeaderProps) => {
+    const screen = useScreenStore((state) => state.screen)
     const setScreen = useScreenStore((state) => state.setScreen)
+    const showChatButton = screen !== 'chat'
 
     return (
         <header
             className={cn(
-                'sticky top-0 z-10 -mx-4 mb-4 flex items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80',
+                'sticky top-0 z-10 mb-4 flex min-w-0 items-center justify-between gap-3 border-b border-border bg-background/95 py-3 pr-1 backdrop-blur supports-backdrop-filter:bg-background/80',
                 className,
             )}
         >
@@ -49,7 +49,7 @@ const ScreenHeader = ({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-                {showChat ? (
+                {showChatButton ? (
                     <button
                         type="button"
                         onClick={() => setScreen('chat')}
@@ -81,7 +81,7 @@ const ScreenHeader = ({
                         <Settings className="h-4 w-4" />
                     </button>
                 ) : (
-                    !showGuide && !showChat ? <div className="h-9 w-9 shrink-0" /> : null
+                    !showGuide && !showChatButton ? <div className="h-9 w-9 shrink-0" /> : null
                 )}
             </div>
         </header>

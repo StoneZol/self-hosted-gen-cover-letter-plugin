@@ -4,14 +4,15 @@ import {
     getMatchingVacancyPlatform,
     isVacancyParsePage,
 } from '@/lib/configs/content/config'
+import type { ContentConfig } from '@/lib/types/content/types'
 import type { AppPageInfo, AppPageType } from '@/lib/types/app/page'
 
-function getPageType(url: URL): AppPageType {
-    if (getMatchingResumePlatform(url.href, DEFAULT_CONTENT_CONFIG)) {
+function getPageType(url: URL, config: ContentConfig = DEFAULT_CONTENT_CONFIG): AppPageType {
+    if (getMatchingResumePlatform(url.href, config)) {
         return 'resume'
     }
 
-    if (getMatchingVacancyPlatform(url.href, DEFAULT_CONTENT_CONFIG)) {
+    if (getMatchingVacancyPlatform(url.href, config)) {
         return 'vacancy'
     }
 
@@ -26,12 +27,16 @@ function getPageType(url: URL): AppPageType {
     return 'other'
 }
 
-export function resolveAppPageInfo(urlString: string, title = ''): AppPageInfo {
+export function resolveAppPageInfo(
+    urlString: string,
+    title = '',
+    config: ContentConfig = DEFAULT_CONTENT_CONFIG,
+): AppPageInfo {
     try {
         const url = new URL(urlString)
 
         return {
-            type: getPageType(url),
+            type: getPageType(url, config),
             url: url.href,
             title,
             checkedAt: new Date().toISOString(),
@@ -46,14 +51,23 @@ export function resolveAppPageInfo(urlString: string, title = ''): AppPageInfo {
     }
 }
 
-export function isResumePage(urlString: string): boolean {
-    return resolveAppPageInfo(urlString).type === 'resume'
+export function isResumePage(
+    urlString: string,
+    config: ContentConfig = DEFAULT_CONTENT_CONFIG,
+): boolean {
+    return resolveAppPageInfo(urlString, '', config).type === 'resume'
 }
 
-export function isVacancyPage(urlString: string): boolean {
-    return resolveAppPageInfo(urlString).type === 'vacancy'
+export function isVacancyPage(
+    urlString: string,
+    config: ContentConfig = DEFAULT_CONTENT_CONFIG,
+): boolean {
+    return resolveAppPageInfo(urlString, '', config).type === 'vacancy'
 }
 
-export function isVacancyParseTab(urlString: string): boolean {
-    return isVacancyParsePage(urlString, DEFAULT_CONTENT_CONFIG)
+export function isVacancyParseTab(
+    urlString: string,
+    config: ContentConfig = DEFAULT_CONTENT_CONFIG,
+): boolean {
+    return isVacancyParsePage(urlString, config)
 }

@@ -3,9 +3,22 @@ import { loadContentConfig } from '@/lib/configs/content/storage'
 import type { ContentConfig } from '@/lib/types/content/types'
 
 let contentConfig: ContentConfig = DEFAULT_CONTENT_CONFIG
+const listeners = new Set<() => void>()
 
 export function getContentConfig(): ContentConfig {
     return contentConfig
+}
+
+export function subscribeContentConfig(listener: () => void): () => void {
+    listeners.add(listener)
+
+    return () => {
+        listeners.delete(listener)
+    }
+}
+
+function notifyContentConfigListeners(): void {
+    listeners.forEach((listener) => listener())
 }
 
 export async function initContentConfig(): Promise<void> {
@@ -18,6 +31,7 @@ export async function initContentConfig(): Promise<void> {
 
         void loadContentConfig().then((nextConfig) => {
             contentConfig = nextConfig
+            notifyContentConfigListeners()
         })
     })
 }

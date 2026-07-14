@@ -8,13 +8,14 @@ import {
 import { findResumeById, RESUMES_STORAGE_KEY } from '@/lib/configs/resume/storage'
 import { watchExtensionJob } from '@/lib/extension/watchExtensionJob'
 import { extractResumeIdFromUrl } from '@/lib/resume/extractResumeIdFromUrl'
+import { formatResumeDisplayTitle } from '@/lib/resume/formatResumeDisplayTitle'
 import type { Resume } from '@/lib/types/resume/types'
 import type { ResumeParseJob } from '@/lib/types/jobs/resumeParseJob'
 import { extractResumeText } from '../../resumePage'
 
 function getSaveHint(existingResume: Resume | null, resumeIdFromUrl: string | null): string {
     if (existingResume) {
-        return `«${existingResume.title}»сохранено — клик обновит.`
+        return `«${formatResumeDisplayTitle(existingResume)}» сохранено — клик обновит.`
     }
 
     if (resumeIdFromUrl) {
@@ -58,8 +59,8 @@ const useSaveResumeHook = () => {
                     setExistingResume(result.resume)
                     await saveAppStatus({
                         message: result.isUpdate
-                            ? `Резюме «${result.resume.title}» обновлено.`
-                            : `Резюме «${result.resume.title}» сохранено.`,
+                            ? `Резюме «${formatResumeDisplayTitle(result.resume)}» обновлено.`
+                            : `Резюме «${formatResumeDisplayTitle(result.resume)}» сохранено.`,
                         type: 'success',
                     })
                     setIsSaving(false)

@@ -1,8 +1,8 @@
 import {
-    DEFAULT_CONTENT_CONFIG,
     getResumeContentElementFromConfig,
     INJECTED_WIDGET_SELECTOR,
 } from '@/lib/configs/content/config'
+import { getContentConfig } from './contentConfigRuntime'
 
 const blockedLinePatterns = [
     /^window\./i,
@@ -36,7 +36,7 @@ function dedupeSequentialLines(lines: string[]): string[] {
 }
 
 export function getResumeContentElement(): HTMLElement | null {
-    return getResumeContentElementFromConfig(window.location.href, DEFAULT_CONTENT_CONFIG)
+    return getResumeContentElementFromConfig(window.location.href, getContentConfig())
 }
 
 export function extractResumeText(): string | null {
