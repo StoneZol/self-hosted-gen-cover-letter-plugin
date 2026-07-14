@@ -3,9 +3,9 @@ import { QuickChatBlock } from '../../QuickChatBlock'
 
 export const ChatScreen = () => {
     return (
-        <div className="flex flex-col gap-4">
-            <ScreenHeader title="Быстрый чат" showBack />
+        <>
+            <ScreenHeader title="Быстрый чат" className="mb-0 shrink-0" />
             <QuickChatBlock variant="page" />
-        </div>
+        </>
     )
 }

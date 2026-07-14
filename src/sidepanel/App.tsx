@@ -1,5 +1,7 @@
 import { Status } from '@/components/Status'
 import { useAppStatus } from '@/components/Status/Status.hooks'
+import { cn } from '@/lib/helpers/cn'
+// import useScreenStore from '@/sidepanel/store'
 import { Navigator } from './_components/Navigator'
 
 function AppStatusBar() {
@@ -17,11 +19,22 @@ function AppStatusBar() {
 }
 
 export default function App() {
+    // const isChatScreen = useScreenStore((state) => state.screen === 'chat')
+
     return (
-        <div className="flex h-screen flex-col overflow-hidden bg-background pl-4 pr-6 text-foreground">
+        <div
+            className={cn(
+                'flex flex-col bg-background pl-4 pr-6 text-foreground',
+                'min-h-screen',
+            )}
+        >
             <AppStatusBar />
 
-            <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto pb-4 pt-4">
+            <div
+                className={cn(
+                    'min-w-[320px] pt-4 pb-4',
+                )}
+            >
                 <Navigator />
             </div>
         </div>

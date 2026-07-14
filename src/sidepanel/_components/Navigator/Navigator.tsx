@@ -1,6 +1,7 @@
 import useScreenStore from '@/sidepanel/store'
 import { DebugCurrentPage } from '@/components/DebugCurrentPage'
 import { ChatScreen } from '../Screens/ChatScreen'
+import { QuickChatInput } from '../QuickChatBlock'
 import { GuideScreen } from '../Screens/GuideScreen'
 import { MainScreen } from '../Screens/MainScreen'
 import { ResumeScreen } from '../Screens/ResumeScreen/ResumeScreen'
@@ -32,7 +33,12 @@ const Navigator = () => {
                 </>
             )
         case 'chat':
-            return <ChatScreen />
+            return (
+                <>
+                    <ChatScreen />
+                    <QuickChatInput />
+                </>
+            )
         case 'main':
         default:
             return (

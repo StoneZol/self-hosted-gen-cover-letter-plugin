@@ -40,12 +40,71 @@ const GUIDE_STEPS = [
     },
 ] as const
 
+const PLATFORM_FIELD_GUIDE = [
+    {
+        title: 'Паттерны URL (regex)',
+        body: 'Определяют, на каких страницах срабатывает платформа. Каждый паттерн — с новой строки. Совпадение проверяется по полному URL.',
+        examples: [
+            '^https://(?:[^./]+\\.)?hh\\.ru/resume/[^/?#]+',
+            '^https://[\\w-]+\\.careerist\\.ru/resume/[^/?#]+\\.html',
+            '^https://(?:[^./]+\\.)?hh\\.ru/vacancy/\\d+',
+        ],
+        notes: [
+            'Используйте ^ и $, если хотите матчить URL целиком или с начала.',
+            'Для slug-ов не используйте только цифры — часто бывает ivanov-ivan-12345678.html, а не 123.html.',
+            'null — платформа не участвует в этом flow.',
+        ],
+    },
+    {
+        title: 'CSS-селекторы контента и полей',
+        body: 'Ищут элементы на странице через document.querySelector. Каждый селектор — с новой строки; перебираются сверху вниз, берётся первый найденный.',
+        examples: [
+            '[data-qa="main-content"]',
+            '#mainPageCenter',
+            'textarea[placeholder*="Сопровод"]',
+            'label:has(+ textarea)',
+            '[contenteditable="true"]',
+        ],
+        notes: [
+            'Поддерживается обычный CSS и :has() по структуре DOM.',
+            'Не поддерживается: :contains("текст"), text=, XPath — querySelector их не понимает.',
+            'Для поля сопроводительного ищется textarea, input или contenteditable внутри найденного элемента.',
+            'null — поиск по этому полю отключён.',
+        ],
+    },
+    {
+        title: 'Какие поля за что отвечают',
+        body: 'В настройках платформы несколько групп паттернов и селекторов.',
+        notes: [
+            'Паттерны страниц резюме + селекторы контента резюме — кнопка «Сохранить резюме» и парсинг текста.',
+            'Паттерны страниц вакансий — общий vacancy-flow (страница вакансии и отклик).',
+            'Паттерны парсинга вакансии + селекторы контента — текст вакансии для sidepanel и LLM.',
+            'Селекторы поля сопроводительного — куда вставлять текст (если сайт позволяет).',
+            'Селекторы контейнера инжекта — куда монтировать кнопку «Сгенерировать»; если null — рядом с полем.',
+        ],
+    },
+    {
+        title: 'Пример минимальной платформы',
+        body: 'Новая платформа: regex URL + селектор контейнера. Остальное можно оставить null, пока не нужны вакансии или отклик.',
+        examples: [
+            'resumePagePatterns: ^https://site\\.ru/resume/.+',
+            'resumeContentSelectors: [id="resume-body"]',
+            'enabled: true',
+        ],
+        notes: [
+            'Если кнопка не появляется — проверьте regex в Debug (Type: resume) и что селектор есть в DOM.',
+            'Если текст не вставляется в кастомный редактор — используйте кнопку копирования рядом с «Сгенерировать».',
+            'Быстрый чат может подсказать regex и CSS-селектор по описанию страницы.',
+        ],
+    },
+] as const
+
 export const GuideScreen = () => {
     const setScreen = useScreenStore((state) => state.setScreen)
 
     return (
         <div className="flex flex-col gap-4">
-            <ScreenHeader title="Гайд" showBack />
+            <ScreenHeader title="Гайд" />
 
             <section className="rounded-xl border border-border bg-card p-4">
                 <div className="mb-3 flex items-center gap-2 text-primary">
@@ -53,7 +112,7 @@ export const GuideScreen = () => {
                     <h2 className="text-sm font-semibold">Как пользоваться</h2>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    Короткий флоу от первого запуска до генерации сопроводительного на hh.ru.
+                    Короткий флоу от первого запуска до генерации сопроводительного. Ниже — формат настроек платформ для других сайтов.
                 </p>
             </section>
 
@@ -88,6 +147,52 @@ export const GuideScreen = () => {
                     </li>
                 ))}
             </ol>
+
+            <section className="rounded-xl border border-border bg-card p-4">
+                <h2 className="text-sm font-semibold text-foreground">Настройки платформ: паттерны и селекторы</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    В Настройках → Контент можно добавить сайты кроме hh.ru. URL матчится regex-паттернами, элементы на
+                    странице — CSS-селекторами.
+                </p>
+            </section>
+
+            <div className="flex flex-col gap-3">
+                {PLATFORM_FIELD_GUIDE.map((section) => (
+                    <section
+                        key={section.title}
+                        className="rounded-xl border border-border bg-card p-4"
+                    >
+                        <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
+                        <p className="mt-2 text-sm text-muted-foreground">{section.body}</p>
+
+                        {'examples' in section && section.examples ? (
+                            <div className="mt-3">
+                                <p className="text-xs font-medium uppercase tracking-wide text-primary">Примеры</p>
+                                <ul className="mt-2 flex flex-col gap-1.5">
+                                    {section.examples.map((example) => (
+                                        <li key={example}>
+                                            <code className="block break-all rounded-md bg-background px-2 py-1.5 text-xs text-foreground">
+                                                {example}
+                                            </code>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : null}
+
+                        {'notes' in section && section.notes ? (
+                            <ul className="mt-3 flex flex-col gap-1.5">
+                                {section.notes.map((note) => (
+                                    <li key={note} className="flex gap-2 text-sm text-muted-foreground">
+                                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                                        <span>{note}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : null}
+                    </section>
+                ))}
+            </div>
 
             <button
                 type="button"

@@ -4,27 +4,22 @@ import { cn } from '@/lib/helpers/cn'
 
 type ScreenHeaderProps = {
     title: string
-    showBack?: boolean
-    showSettings?: boolean
-    showGuide?: boolean
     className?: string
 }
 
-const ScreenHeader = ({
-    title,
-    showBack = false,
-    showSettings = false,
-    showGuide = false,
-    className,
-}: ScreenHeaderProps) => {
+const ScreenHeader = ({ title, className }: ScreenHeaderProps) => {
     const screen = useScreenStore((state) => state.screen)
     const setScreen = useScreenStore((state) => state.setScreen)
+
+    const showBack = screen !== 'main'
     const showChatButton = screen !== 'chat'
+    const showGuideButton = screen !== 'guide'
+    const showSettingsButton = screen !== 'settings'
 
     return (
         <header
             className={cn(
-                'sticky top-0 z-10 mb-4 flex min-w-0 items-center justify-between gap-3 border-b border-border bg-background/95 py-3 pr-1 backdrop-blur supports-backdrop-filter:bg-background/80',
+                'sticky top-0 z-10 mb-4 flex min-w-0 items-center justify-between gap-3 border-b border-border bg-background/95 py-2 pr-1 backdrop-blur supports-backdrop-filter:bg-background/80',
                 className,
             )}
         >
@@ -60,7 +55,7 @@ const ScreenHeader = ({
                     </button>
                 ) : null}
 
-                {showGuide ? (
+                {showGuideButton ? (
                     <button
                         type="button"
                         onClick={() => setScreen('guide')}
@@ -71,7 +66,7 @@ const ScreenHeader = ({
                     </button>
                 ) : null}
 
-                {showSettings ? (
+                {showSettingsButton ? (
                     <button
                         type="button"
                         onClick={() => setScreen('settings')}
@@ -80,9 +75,7 @@ const ScreenHeader = ({
                     >
                         <Settings className="h-4 w-4" />
                     </button>
-                ) : (
-                    !showGuide && !showChatButton ? <div className="h-9 w-9 shrink-0" /> : null
-                )}
+                ) : null}
             </div>
         </header>
     )

@@ -1,6 +1,7 @@
 import { Suspense, use } from 'react'
 import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
 import { DEFAULT_COVER_LETTER_CONFIG } from '@/lib/configs/coverLetter/storage'
+import { DEFAULT_QUICK_CHAT_CONFIG } from '@/lib/configs/quickChat/storage'
 import { DEFAULT_RESUME_PARSING_CONFIG } from '@/lib/configs/resumeParsing/storage'
 import { cn } from '@/lib/helpers/cn'
 import { ScreenHeader } from '../../ScreenHeader'
@@ -36,11 +37,13 @@ const SettingsScreenContent = () => {
         contentConfig,
         coverLetterConfig,
         resumeParsingConfig,
+        quickChatConfig,
         isSaving,
         healthCheckState,
         updateLlmConfig,
         updateCoverLetterConfig,
         updateResumeParsingConfig,
+        updateQuickChatConfig,
         updateContentPlatform,
         addContentPlatform,
         removeContentPlatform,
@@ -53,7 +56,7 @@ const SettingsScreenContent = () => {
 
     return (
         <div className="flex flex-col gap-4">
-            <ScreenHeader title="Настройки" showBack />
+            <ScreenHeader title="Настройки" />
 
             <p className="text-sm text-muted-foreground">
                 Все конфиги всегда видны на экране. Для длинных значений используем `textarea`,
@@ -187,16 +190,35 @@ const SettingsScreenContent = () => {
             />
 
             <SettingsSection
-                title="Контент"
-                description="Список платформ с ручным id, названием, флагом включения и массивами matcher/selectors. Для пустых значений используйте null."
-                fields={[]}
+                title="Быстрый чат"
+                description="System prompt для экрана чата в sidepanel. Используется как системное сообщение при каждом запросе."
+                fields={[
+                    {
+                        key: 'systemPrompt',
+                        label: 'System prompt',
+                        value: quickChatConfig.systemPrompt,
+                        description:
+                            'Инструкции для LLM: чем помогать, как отвечать про regex, селекторы и конфиги платформ.',
+                        defaultExample: DEFAULT_QUICK_CHAT_CONFIG.systemPrompt,
+                        rows: 16,
+                        helperText: 'Редактируйте под себя. Применяется после сохранения конфигов.',
+                        onChange: (value) => updateQuickChatConfig('systemPrompt', value),
+                    },
+                ]}
             />
+
+            <section className="rounded-xl border border-border bg-card p-4">
+                <h2 className="text-sm font-semibold text-foreground">Контент</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Каждая платформа ниже — отдельный сайт или ресурс, который расширение умеет матчить и парсить.
+                    Укажите id, название, regex URL и CSS-селекторы. Для пустых значений используйте null.
+                </p>
+            </section>
 
             {contentConfig.platforms.map((platform, platformIndex) => (
                 <SettingsSection
                     key={`platform-${platformIndex}`}
                     title={`Платформа: ${getPlatformDisplayTitle(platform, platformIndex)}`}
-                    description="Одна запись описывает одну платформу или сайт, который умеем матчить и парсить."
                     defaultCollapsed
                     onDelete={() => removeContentPlatform(platformIndex)}
                     deleteLabel="Удалить платформу"
@@ -380,7 +402,7 @@ const SettingsScreenContent = () => {
 const SettingsScreenFallback = () => {
     return (
         <div className="flex flex-col gap-4">
-            <ScreenHeader title="Настройки" showBack />
+            <ScreenHeader title="Настройки" />
             <section className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
                 Загружаю конфиги...
             </section>

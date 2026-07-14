@@ -41,6 +41,7 @@ export function DebugCurrentPage() {
     const [pageInfo, setPageInfo] = useState<AppPageInfo | null>(null)
     const [observerDebug, setObserverDebug] = useState<ContentObserverDebug | null>(null)
     const [activeTabUrl, setActiveTabUrl] = useState('')
+    const [isCollapsed, setIsCollapsed] = useState(true)
 
     useEffect(() => {
         async function loadDebugState() {
@@ -109,15 +110,8 @@ export function DebugCurrentPage() {
 
     const isObserverForActiveTab = observerDebug?.url === activeTabUrl
 
-    return (
-        <section className="mt-4 rounded-xl border border-border bg-card p-4">
-            <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                    Debug
-                </p>
-                <h2 className="text-sm font-semibold text-foreground">Current page detector</h2>
-            </div>
-
+    const content = (
+        <>
             <div className="mt-4 space-y-2 text-sm">
                 <p>
                     <span className="font-medium text-foreground">Type:</span>{' '}
@@ -200,6 +194,34 @@ export function DebugCurrentPage() {
                     </p>
                 </div>
             </div>
-        </section>
+        </>
+    )
+
+    return (
+        <details
+            className="mt-4 rounded-xl border border-border bg-card p-4"
+            open={!isCollapsed}
+        >
+            <summary
+                className="cursor-pointer list-none"
+                onClick={(event) => {
+                    event.preventDefault()
+                    setIsCollapsed((currentValue) => !currentValue)
+                }}
+            >
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                            Debug
+                        </p>
+                        <h2 className="text-sm font-semibold text-foreground">Current page detector</h2>
+                    </div>
+                    <span className="shrink-0 text-xs font-medium text-primary">
+                        {isCollapsed ? 'Развернуть' : 'Свернуть'}
+                    </span>
+                </div>
+            </summary>
+            {content}
+        </details>
     )
 }

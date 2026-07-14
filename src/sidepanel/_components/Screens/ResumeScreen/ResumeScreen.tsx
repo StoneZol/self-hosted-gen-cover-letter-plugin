@@ -9,7 +9,7 @@ export const ResumeScreen = () => {
 
     return (
         <div className="flex flex-col gap-4">
-            <ScreenHeader title="Резюме" showBack />
+            <ScreenHeader title="Резюме" />
 
             {hasResumes ? <ResumePicker action="delete" /> : null}
 

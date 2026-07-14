@@ -1,10 +1,9 @@
 import { useCallback } from 'react'
 import { extractAssistantText, generateChatCompletion } from '@/lib/api/llm/openaiCompatible'
+import { loadQuickChatConfig } from '@/lib/configs/quickChat/storage'
 import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import type { ChatMessage } from '@/lib/types/llm/types'
 import useQuickChatStore from './quickChatStore'
-
-const QUICK_CHAT_SYSTEM_PROMPT = ``
 
 function createMessageId(): string {
     return crypto.randomUUID()
@@ -37,10 +36,10 @@ export function useQuickChat() {
         setIsLoading(true)
 
         try {
-            const config = await loadLlmConfig()
+            const [config, quickChatConfig] = await Promise.all([loadLlmConfig(), loadQuickChatConfig()])
             const history = useQuickChatStore.getState().messages
             const chatMessages: ChatMessage[] = [
-                { role: 'system', content: QUICK_CHAT_SYSTEM_PROMPT },
+                { role: 'system', content: quickChatConfig.systemPrompt },
                 ...history.map((message) => ({
                     role: message.role,
                     content: message.content,

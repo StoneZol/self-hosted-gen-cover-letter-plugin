@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { useQuickChat } from '@/sidepanel/useQuickChat'
 import { cn } from '@/lib/helpers/cn'
@@ -13,12 +13,36 @@ export function QuickChatBlock({ variant = 'embedded' }: QuickChatBlockProps) {
     const messagesEndRef = useRef<HTMLDivElement | null>(null)
     const isPage = variant === 'page'
 
+    function scrollChatToBottom(behavior: ScrollBehavior = 'smooth') {
+        messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' })
+        document.documentElement.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior,
+        })
+    }
+
+    useLayoutEffect(() => {
+        if (!isPage) {
+            return
+        }
+
+        scrollChatToBottom('auto')
+    }, [isPage, messages])
+
     useEffect(() => {
         if (!isPage) {
             return
         }
 
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        const frameId = requestAnimationFrame(() => {
+            scrollChatToBottom('smooth')
+
+            requestAnimationFrame(() => {
+                scrollChatToBottom('auto')
+            })
+        })
+
+        return () => cancelAnimationFrame(frameId)
     }, [isPage, messages, isLoading])
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -59,25 +83,16 @@ export function QuickChatBlock({ variant = 'embedded' }: QuickChatBlockProps) {
                         )}
                     </div>
                 ))}
-                <div ref={messagesEndRef} />
             </div>
         ) : isPage ? (
             <p className="text-sm text-muted-foreground">Пока сообщений нет. Напишите запрос ниже.</p>
         ) : null
 
     const inputForm = (
-        <form
-            onSubmit={handleSubmit}
-            className={cn(
-                'flex flex-col gap-3',
-                isPage
-                    ? 'sticky bottom-0 -mx-4 border-t border-border bg-card px-4 py-4'
-                    : 'mt-4',
-            )}
-        >
+        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
             <textarea
                 value={draft}
-                rows={isPage ? 3 : 3}
+                rows={3}
                 placeholder="Например: напиши regex для страниц резюме на superjob.ru"
                 disabled={isLoading}
                 onChange={(event) => setDraft(event.target.value)}
@@ -97,8 +112,8 @@ export function QuickChatBlock({ variant = 'embedded' }: QuickChatBlockProps) {
 
     if (isPage) {
         return (
-            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-                <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 mb-44 pr-1">
+                <div className="flex items-start justify-between gap-3 pb-4">
                     <p className="text-sm text-muted-foreground">
                         Задайте вопрос LLM — например, попросите regex для новой платформы или подсказку по
                         селекторам.
@@ -118,9 +133,9 @@ export function QuickChatBlock({ variant = 'embedded' }: QuickChatBlockProps) {
 
                 {messagesList}
 
-                {isLoading ? <p className="text-sm text-muted-foreground">Думаю...</p> : null}
+                {isLoading ? <p className="mt-3 text-sm text-muted-foreground">Думаю...</p> : null}
 
-                {inputForm}
+                <div ref={messagesEndRef} aria-hidden="true" />
             </div>
         )
     }
@@ -143,8 +158,7 @@ export function QuickChatBlock({ variant = 'embedded' }: QuickChatBlockProps) {
             </div>
 
             <p className="text-sm text-muted-foreground">
-                Задайте вопрос LLM прямо здесь — например, попросите regex для новой платформы или подсказку по
-                селекторам.
+                Задайте вопрос LLM прямо здесь
             </p>
 
             {messagesList}

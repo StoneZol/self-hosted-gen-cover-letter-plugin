@@ -15,9 +15,15 @@ import {
     loadResumeParsingConfig,
     saveResumeParsingConfig,
 } from '@/lib/configs/resumeParsing/storage'
+import {
+    DEFAULT_QUICK_CHAT_CONFIG,
+    loadQuickChatConfig,
+    saveQuickChatConfig,
+} from '@/lib/configs/quickChat/storage'
 import type { ContentConfig, ContentPlatform } from '@/lib/types/content/types'
 import type { CoverLetterConfig } from '@/lib/types/coverLetter/types'
 import type { OpenAiCompatibleConfig } from '@/lib/types/llm/types'
+import type { QuickChatConfig } from '@/lib/types/quickChat/types'
 import type { ResumeParsingConfig } from '@/lib/types/resumeParsing/types'
 
 type SettingsScreenData = {
@@ -25,6 +31,7 @@ type SettingsScreenData = {
     contentConfig: ContentConfig
     coverLetterConfig: CoverLetterConfig
     resumeParsingConfig: ResumeParsingConfig
+    quickChatConfig: QuickChatConfig
 }
 
 let settingsScreenDataPromise: Promise<SettingsScreenData> | null = null
@@ -36,11 +43,13 @@ export function loadSettingsScreenData(): Promise<SettingsScreenData> {
             loadContentConfig(),
             loadCoverLetterConfig(),
             loadResumeParsingConfig(),
-        ]).then(([llmConfig, contentConfig, coverLetterConfig, resumeParsingConfig]) => ({
+            loadQuickChatConfig(),
+        ]).then(([llmConfig, contentConfig, coverLetterConfig, resumeParsingConfig, quickChatConfig]) => ({
             llmConfig,
             contentConfig,
             coverLetterConfig,
             resumeParsingConfig,
+            quickChatConfig,
         }))
     }
 
@@ -61,6 +70,7 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
     const [contentConfig, setContentConfig] = useState(initialData.contentConfig)
     const [coverLetterConfig, setCoverLetterConfig] = useState(initialData.coverLetterConfig)
     const [resumeParsingConfig, setResumeParsingConfig] = useState(initialData.resumeParsingConfig)
+    const [quickChatConfig, setQuickChatConfig] = useState(initialData.quickChatConfig)
     const [isSaving, setIsSaving] = useState(false)
     const [healthCheckState, setHealthCheckState] = useState<HealthCheckState>('idle')
     const healthCheckResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -114,6 +124,13 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         }))
     }
 
+    function updateQuickChatConfig<K extends keyof QuickChatConfig>(key: K, value: QuickChatConfig[K]) {
+        setQuickChatConfig((currentConfig) => ({
+            ...currentConfig,
+            [key]: value,
+        }))
+    }
+
     function updateContentConfig<K extends keyof ContentConfig>(key: K, value: ContentConfig[K]) {
         setContentConfig((currentConfig) => ({
             ...currentConfig,
@@ -162,6 +179,7 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
                 saveContentConfig(contentConfig),
                 saveCoverLetterConfig(coverLetterConfig),
                 saveResumeParsingConfig(resumeParsingConfig),
+                saveQuickChatConfig(quickChatConfig),
             ])
 
             resetSettingsScreenData()
@@ -186,12 +204,14 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
                 saveContentConfig(DEFAULT_CONTENT_CONFIG),
                 saveCoverLetterConfig(DEFAULT_COVER_LETTER_CONFIG),
                 saveResumeParsingConfig(DEFAULT_RESUME_PARSING_CONFIG),
+                saveQuickChatConfig(DEFAULT_QUICK_CHAT_CONFIG),
             ])
 
             setLlmConfig(DEFAULT_LLM_CONFIG)
             setContentConfig(DEFAULT_CONTENT_CONFIG)
             setCoverLetterConfig(DEFAULT_COVER_LETTER_CONFIG)
             setResumeParsingConfig(DEFAULT_RESUME_PARSING_CONFIG)
+            setQuickChatConfig(DEFAULT_QUICK_CHAT_CONFIG)
             resetSettingsScreenData()
             await setStatus('Конфиги сброшены к значениям по умолчанию.', 'success')
         } catch (error: unknown) {
@@ -232,11 +252,13 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         contentConfig,
         coverLetterConfig,
         resumeParsingConfig,
+        quickChatConfig,
         isSaving,
         healthCheckState,
         updateLlmConfig,
         updateCoverLetterConfig,
         updateResumeParsingConfig,
+        updateQuickChatConfig,
         updateContentConfig,
         updateContentPlatform,
         addContentPlatform,
