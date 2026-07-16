@@ -6,11 +6,11 @@ export default defineManifest({
     name: pkg.name,
     version: pkg.version,
     icons: {
-        48: 'public/logo.png',
+        128: 'public/logo.png',
     },
     action: {
         default_icon: {
-            48: 'public/logo.png',
+            128: 'public/logo.png',
         },
         default_popup: 'src/popup/index.html',
     },
@@ -26,14 +26,9 @@ export default defineManifest({
         service_worker: 'src/background/main.ts',
         type: 'module',
     },
-    host_permissions: [
-        'http://localhost/*',
-        'http://localhost:1234/*',
-        'https://localhost/*',
-        'https://localhost:1234/*',
-        'http://127.0.0.1/*',
-        'https://api.openai.com/*',
-    ],
+    // LLM может быть на localhost, LAN IP, своём домене или у облачного провайдера —
+    // поэтому разрешаем любые origin'ы для fetch из расширения.
+    host_permissions: ['<all_urls>'],
     content_scripts: [{
         js: ['src/content/main.tsx'],
         matches: ['https://*/*'],

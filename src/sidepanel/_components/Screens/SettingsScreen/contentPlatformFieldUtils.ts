@@ -21,15 +21,16 @@ export function stringifyNullableLines(values: string[] | null): string {
 }
 
 export function parseNullableLinesForEdit(value: string): string[] | null {
-    const trimmed = value.trim()
+    const normalized = value.replace(/\r\n/g, '\n')
+    const trimmedWhole = normalized.trim()
 
-    if (!trimmed || trimmed.toLowerCase() === 'null') {
+    if (!trimmedWhole || trimmedWhole.toLowerCase() === 'null') {
         return null
     }
 
-    const lines = value.split('\n').map((line) => line.trim()).filter(Boolean)
-
-    return lines.length > 0 ? lines : null
+    // Keep empty lines and trailing newlines while editing — otherwise Enter
+    // appears to do nothing (empty line is filtered out on every keystroke).
+    return normalized.split('\n')
 }
 
 export function getPlatformDisplayTitle(platform: { id: string | null; title: string | null }, index: number): string {

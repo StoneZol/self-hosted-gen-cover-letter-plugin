@@ -20,13 +20,22 @@ export const DEFAULT_CONTENT_CONFIG: ContentConfig = {
             id: 'hh',
             title: 'HeadHunter',
             enabled: true,
-            resumePagePatterns: ['^https://(?:[^./]+\\.)?hh\\.ru/resume/[^/?#]+'],
+            // hh.ru без города (Москва и др.) + городские субдомены (spb.hh.ru, ...)
+            resumePagePatterns: [
+                '^https://hh\\.ru/resume/[^/?#]+',
+                '^https://[^./]+\\.hh\\.ru/resume/[^/?#]+',
+            ],
             resumeContentSelectors: ['[data-qa="main-content"]'],
             vacancyPagePatterns: [
-                '^https://(?:[^./]+\\.)?hh\\.ru/vacancy/\\d+',
-                '^https://(?:[^./]+\\.)?hh\\.ru/applicant/vacancy_response',
+                '^https://hh\\.ru/vacancy/\\d+',
+                '^https://[^./]+\\.hh\\.ru/vacancy/\\d+',
+                '^https://hh\\.ru/applicant/vacancy_response',
+                '^https://[^./]+\\.hh\\.ru/applicant/vacancy_response',
             ],
-            vacancyParsePagePatterns: ['^https://(?:[^./]+\\.)?hh\\.ru/vacancy/\\d+'],
+            vacancyParsePagePatterns: [
+                '^https://hh\\.ru/vacancy/\\d+',
+                '^https://[^./]+\\.hh\\.ru/vacancy/\\d+',
+            ],
             vacancyParseContentSelectors: [
                 '.bloko-column.bloko-column_container.bloko-column_xs-4.bloko-column_s-8.bloko-column_m-12.bloko-column_l-10',
             ],

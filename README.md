@@ -1,52 +1,123 @@
-# React + Vite + CRXJS
+# Self-Hosted Gen Cover Letter Plugin (SHGCL)
 
-This template helps you quickly start developing Chrome extensions with React, TypeScript and Vite. It includes the CRXJS Vite plugin for seamless Chrome extension development.
+Браузерное расширение (Chrome MV3), которое помогает сохранять резюме, подтягивать вакансии и генерировать сопроводительные письма через **вашу** LLM — локальную (LM Studio и аналоги) или облачную OpenAI-compatible API.
 
-## Features
+По умолчанию из коробки настроен [hh.ru](https://hh.ru). Другие job-сайты можно добавить в настройках через regex URL и CSS-селекторы. Готовые конфиги платформ можно обменивать через буфер обмена.
 
-- React with TypeScript
-- TypeScript support
-- Vite build tool
-- CRXJS Vite plugin integration
-- Chrome extension manifest configuration
+## Что умеет
 
-## Quick Start
+- Подключение к любой OpenAI-compatible LLM (LM Studio, OpenAI и т.п.)
+- Парсинг и сохранение резюме со страницы сайта
+- Автопарсинг вакансии и генерация сопроводительного с вставкой в поле отклика
+- Настраиваемые промпты (письмо, парсинг резюме, быстрый чат)
+- Несколько платформ (сайтов) с regex/CSS-конфигом
+- Импорт/экспорт конфига платформы через clipboard
+- Side panel UI + кнопки на страницах
 
-1. Install dependencies:
+Подробный флоу — во вкладке **Гайд** внутри расширения.
 
-```bash
-npm install
+## Требования
+
+- Google Chrome / Chromium (или Edge на Chromium)
+- Node.js 20+ (только если собираете из исходников)
+- Запущенная LLM с OpenAI-compatible endpoint (например LM Studio на `http://localhost:1234/v1`)
+
+## Установка из релиза (без сборки)
+
+После `npm run build` в папке `release/` появляется архив вида:
+
+```text
+release/crx-self-hosted-gen-cover-letter-plugin-1.0.0.zip
 ```
 
-2. Start development server:
+1. Скачайте zip из `release/` (из репозитория / Releases / у автора).
+2. Распакуйте архив в любую папку.
+3. Откройте `chrome://extensions/`.
+4. Включите **«Режим разработчика»** (Developer mode).
+5. Нажмите **«Загрузить распакованное расширение»** (Load unpacked).
+6. Укажите **распакованную папку** (внутри должен быть `manifest.json`).
+
+Готово. Иконка появится на панели; основной UI — в **боковой панели** (side panel).
+
+> Если обновляете версию: удалите старое расширение или загрузите новую папку поверх и нажмите «Обновить» на карточке расширения. После обновления обновите вкладки job-сайтов.
+
+## Установка из исходников
+
+```bash
+git clone <url-репозитория>
+cd hh-free-cheat   # или имя вашей папки клона
+
+npm install
+npm run build
+```
+
+Сборка кладёт готовое расширение в `dist/`, zip — в `release/`.
+
+Дальше как выше: `chrome://extensions/` → режим разработчика → **Load unpacked** → выберите папку **`dist`**.
+
+### Разработка
 
 ```bash
 npm run dev
 ```
 
-3. Open Chrome and navigate to `chrome://extensions/`, enable "Developer mode", and load the unpacked extension from the `dist` directory.
+Затем загрузите unpacked из `dist` (CRXJS обновляет её на лету). После правок иногда нужна перезагрузка расширения на `chrome://extensions/`.
 
-4. Build for production:
+## Первая настройка
 
-```bash
-npm run build
+1. Откройте side panel расширения.
+2. **Настройки → LLM**: base URL, API key, модель.
+3. Нажмите **«Проверить подключение»**.
+4. По желанию поправьте промпт сопроводительного и подпись.
+5. **Сохранить конфиги**.
+
+Для LM Studio обычно:
+
+| Поле     | Значение                     |
+| -------- | ---------------------------- |
+| Base URL | `http://localhost:1234/v1`   |
+| API key  | любое (например `lm-studio`) |
+| Model    | id модели из LM Studio       |
+
+## Быстрый сценарий (hh.ru)
+
+1. Откройте своё резюме → кнопка расширения на странице → сохранить резюме.
+2. Откройте вакансию → текст подтянется в side panel.
+3. На форме отклика → **«Сгенерировать сопровод»** → текст вставится в поле (или скопируйте кнопкой рядом, если сайт с кастомным редактором).
+
+## Обмен конфигами сайтов
+
+В **Настройки → Контент** на карточке платформы:
+
+- стрелка вверх — скопировать JSON конфига в буфер;
+- стрелка вниз — вставить из буфера (с подтверждением);
+- затем **«Сохранить конфиги»**.
+
+Формат:
+
+```json
+{
+    "type": "SHG-content-platform",
+    "version": 1,
+    "platform": {}
+}
 ```
 
-## Project Structure
+Принимается и старый type `hh-free-cheat-content-platform`, и голый объект `platform`.
 
-- `src/popup/` - Extension popup UI
-- `src/content/` - Content scripts
-- `manifest.config.ts` - Chrome extension manifest configuration
+## Структура репозитория
 
-## Documentation
+```text
+src/
+  sidepanel/   — UI боковой панели
+  content/     — инжект на страницах сайтов
+  background/  — service worker
+  lib/         — API LLM, конфиги, типы
+manifest.config.ts
+dist/          — собранное расширение (Load unpacked)
+release/       — zip для раздачи без сборки
+```
 
-- [React Documentation](https://reactjs.org/)
-- [Vite Documentation](https://vitejs.dev/)
-- [CRXJS Documentation](https://crxjs.dev/vite-plugin)
+## Лицензия / использование
 
-## Chrome Extension Development Notes
-
-- Use `manifest.config.ts` to configure your extension
-- The CRXJS plugin automatically handles manifest generation
-- Content scripts should be placed in `src/content/`
-- Popup UI should be placed in `src/popup/`
+Проект для личного и совместного использования. Данные резюме и вакансий уходят только на указанный вами LLM endpoint — магазин Chrome и сторонние серверы автора не участвуют.
