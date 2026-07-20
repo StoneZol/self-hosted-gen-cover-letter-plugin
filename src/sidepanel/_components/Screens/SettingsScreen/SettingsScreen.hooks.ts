@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppStatus } from '@/components/Status'
-import { healthCheckOpenAiCompatible } from '@/lib/api/llm/openaiCompatible'
+import { healthCheckLlm } from '@/lib/api/llm/client'
 import { DEFAULT_CONTENT_CONFIG, createDefaultContentPlatform } from '@/lib/configs/content/config'
 import { loadContentConfig, saveContentConfig } from '@/lib/configs/content/storage'
 import {
@@ -8,8 +8,12 @@ import {
     loadCoverLetterConfig,
     saveCoverLetterConfig,
 } from '@/lib/configs/coverLetter/storage'
-import { DEFAULT_LLM_CONFIG } from '@/lib/configs/llm/storage'
-import { loadLlmConfig, saveLlmConfig } from '@/lib/configs/llm/storage'
+import {
+    DEFAULT_OPENAI_COMPATIBLE_LLM_CONFIG,
+    getDefaultLlmConfigForProvider,
+    loadLlmConfig,
+    saveLlmConfig,
+} from '@/lib/configs/llm/storage'
 import {
     DEFAULT_RESUME_PARSING_CONFIG,
     loadResumeParsingConfig,
@@ -22,7 +26,7 @@ import {
 } from '@/lib/configs/quickChat/storage'
 import type { ContentConfig, ContentPlatform } from '@/lib/types/content/types'
 import type { CoverLetterConfig } from '@/lib/types/coverLetter/types'
-import type { OpenAiCompatibleConfig } from '@/lib/types/llm/types'
+import type { LlmConfig, LlmProviderType } from '@/lib/types/llm/types'
 import type { QuickChatConfig } from '@/lib/types/quickChat/types'
 import type { ResumeParsingConfig } from '@/lib/types/resumeParsing/types'
 import {
@@ -31,7 +35,7 @@ import {
 } from './contentPlatformImportExport'
 
 type SettingsScreenData = {
-    llmConfig: OpenAiCompatibleConfig
+    llmConfig: LlmConfig
     contentConfig: ContentConfig
     coverLetterConfig: CoverLetterConfig
     resumeParsingConfig: ResumeParsingConfig
@@ -98,14 +102,28 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         }, HEALTH_CHECK_RESET_MS)
     }
 
-    function updateLlmConfig<K extends keyof OpenAiCompatibleConfig>(
-        key: K,
-        value: OpenAiCompatibleConfig[K],
-    ) {
+    function updateLlmConfig<K extends keyof LlmConfig>(key: K, value: LlmConfig[K]) {
         setLlmConfig((currentConfig) => ({
             ...currentConfig,
             [key]: value,
         }))
+    }
+
+    function updateLlmProviderType(providerType: LlmProviderType) {
+        setLlmConfig((currentConfig) => {
+            if (currentConfig.providerType === providerType) {
+                return currentConfig
+            }
+
+            const defaults = getDefaultLlmConfigForProvider(providerType)
+
+            return {
+                ...defaults,
+                providerType,
+                temperature: currentConfig.temperature,
+                maxTokens: currentConfig.maxTokens,
+            }
+        })
     }
 
     function updateCoverLetterConfig<K extends keyof CoverLetterConfig>(
@@ -223,7 +241,6 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
             await Promise.all([
                 saveLlmConfig({
                     ...llmConfig,
-                    providerType: 'openai-compatible',
                     temperature: Number(llmConfig.temperature) || 0,
                     maxTokens: Number(llmConfig.maxTokens) || 0,
                 }),
@@ -251,14 +268,14 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
 
         try {
             await Promise.all([
-                saveLlmConfig(DEFAULT_LLM_CONFIG),
+                saveLlmConfig(DEFAULT_OPENAI_COMPATIBLE_LLM_CONFIG),
                 saveContentConfig(DEFAULT_CONTENT_CONFIG),
                 saveCoverLetterConfig(DEFAULT_COVER_LETTER_CONFIG),
                 saveResumeParsingConfig(DEFAULT_RESUME_PARSING_CONFIG),
                 saveQuickChatConfig(DEFAULT_QUICK_CHAT_CONFIG),
             ])
 
-            setLlmConfig(DEFAULT_LLM_CONFIG)
+            setLlmConfig(DEFAULT_OPENAI_COMPATIBLE_LLM_CONFIG)
             setContentConfig(DEFAULT_CONTENT_CONFIG)
             setCoverLetterConfig(DEFAULT_COVER_LETTER_CONFIG)
             setResumeParsingConfig(DEFAULT_RESUME_PARSING_CONFIG)
@@ -283,9 +300,8 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         setHealthCheckState('checking')
 
         try {
-            await healthCheckOpenAiCompatible({
+            await healthCheckLlm({
                 ...llmConfig,
-                providerType: 'openai-compatible',
                 temperature: Number(llmConfig.temperature) || 0,
                 maxTokens: Number(llmConfig.maxTokens) || 0,
             })
@@ -307,6 +323,7 @@ export function useSettingsScreen(initialData: SettingsScreenData) {
         isSaving,
         healthCheckState,
         updateLlmConfig,
+        updateLlmProviderType,
         updateCoverLetterConfig,
         updateResumeParsingConfig,
         updateQuickChatConfig,

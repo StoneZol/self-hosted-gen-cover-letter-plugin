@@ -1,4 +1,8 @@
-import { generateChatCompletion, extractAssistantText } from '@/lib/api/llm/openaiCompatible'
+import {
+    extractAssistantText,
+    generateChatCompletion,
+    isResponseTruncated,
+} from '@/lib/api/llm/client'
 import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import { resumeSchema, type Resume } from '@/lib/types/resume/types'
 import { buildResumeParsingMessages } from './buildResumeParsingMessages'
@@ -29,9 +33,7 @@ export async function parseResumeWithLlm({
         throw new Error('Модель вернула пустой ответ.')
     }
 
-    const finishReason = response?.choices?.[0]?.finish_reason
-
-    if (finishReason === 'length') {
+    if (isResponseTruncated(response)) {
         throw new Error('Ответ модели обрезан по max tokens. Увеличьте max tokens в настройках LLM.')
     }
 

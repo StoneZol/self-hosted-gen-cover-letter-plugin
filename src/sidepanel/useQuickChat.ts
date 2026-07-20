@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { extractAssistantText, generateChatCompletion } from '@/lib/api/llm/openaiCompatible'
+import { extractAssistantText, generateChatCompletion } from '@/lib/api/llm/client'
 import { loadQuickChatConfig } from '@/lib/configs/quickChat/storage'
 import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import type { ChatMessage } from '@/lib/types/llm/types'

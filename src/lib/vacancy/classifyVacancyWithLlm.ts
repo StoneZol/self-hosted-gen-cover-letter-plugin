@@ -3,7 +3,7 @@ import {
     vacancyClassificationResultSchema,
     type VacancyClassificationResult,
 } from '@/lib/types/vacancy/types'
-import { generateChatCompletion, extractAssistantText } from '@/lib/api/llm/openaiCompatible'
+import { extractAssistantText, generateChatCompletion } from '@/lib/api/llm/client'
 import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import { buildVacancyClassificationMessages } from './buildVacancyClassificationMessages'
 

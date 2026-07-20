@@ -1,8 +1,11 @@
 import { Suspense, use } from 'react'
+import { Select } from '@/components/Select'
+import { DEFAULT_ANTHROPIC_LLM_CONFIG, DEFAULT_OPENAI_COMPATIBLE_LLM_CONFIG } from '@/lib/configs/llm/storage'
 import { DEFAULT_CONTENT_CONFIG } from '@/lib/configs/content/config'
 import { DEFAULT_COVER_LETTER_CONFIG } from '@/lib/configs/coverLetter/storage'
 import { DEFAULT_QUICK_CHAT_CONFIG } from '@/lib/configs/quickChat/storage'
 import { DEFAULT_RESUME_PARSING_CONFIG } from '@/lib/configs/resumeParsing/storage'
+import type { LlmProviderType } from '@/lib/types/llm/types'
 import { cn } from '@/lib/helpers/cn'
 import { ScreenHeader } from '../../ScreenHeader'
 import {
@@ -31,6 +34,17 @@ function getHealthCheckButtonLabel(
     }
 }
 
+const LLM_PROVIDER_OPTIONS: Array<{ value: LlmProviderType; label: string }> = [
+    {
+        value: 'openai-compatible',
+        label: 'OpenAI-compatible',
+    },
+    {
+        value: 'anthropic',
+        label: 'Anthropic Messages API',
+    },
+]
+
 const SettingsScreenContent = () => {
     const initialData = use(loadSettingsScreenData())
     const {
@@ -42,6 +56,7 @@ const SettingsScreenContent = () => {
         isSaving,
         healthCheckState,
         updateLlmConfig,
+        updateLlmProviderType,
         updateCoverLetterConfig,
         updateResumeParsingConfig,
         updateQuickChatConfig,
@@ -57,6 +72,10 @@ const SettingsScreenContent = () => {
     } = useSettingsScreen(initialData)
 
     const defaultPlatform = DEFAULT_CONTENT_CONFIG.platforms[0]
+    const isAnthropicProvider = llmConfig.providerType === 'anthropic'
+    const llmDefaults = isAnthropicProvider
+        ? DEFAULT_ANTHROPIC_LLM_CONFIG
+        : DEFAULT_OPENAI_COMPATIBLE_LLM_CONFIG
 
     return (
         <div className="flex flex-col gap-4">
@@ -67,24 +86,40 @@ const SettingsScreenContent = () => {
                 чтобы без боли хранить URL, regex, селекторы и будущие промпты.
             </p>
 
+            <section className="rounded-xl border border-border bg-card p-4">
+                <h2 className="text-sm font-semibold text-foreground">LLM</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                    Подключение к локальному LLM по умолчанию. OpenAI-compatible — LM Studio, vLLM и
+                    другие прокси. Anthropic — Messages API через локальный прокси (`/v1/messages`).
+                </p>
+
+                <div className="mt-4">
+                    <Select
+                        label="Тип провайдера"
+                        value={llmConfig.providerType}
+                        options={LLM_PROVIDER_OPTIONS}
+                        onChange={updateLlmProviderType}
+                        disabled={isSaving}
+                    />
+                </div>
+            </section>
+
             <SettingsSection
-                title="LLM"
-                description="Подключение к OpenAI-compatible провайдеру."
+                title="Параметры LLM"
+                description={
+                    isAnthropicProvider
+                        ? 'Anthropic Messages API: base URL до `/v1`, запросы идут на `/messages`. Для облака — `https://api.anthropic.com/v1`.'
+                        : 'OpenAI-compatible API: base URL до `/v1`, ключ в Authorization Bearer.'
+                }
                 fields={[
-                    {
-                        key: 'providerType',
-                        label: 'Тип провайдера',
-                        value: llmConfig.providerType,
-                        description: 'Тип провайдера LLM. Пока поддерживаем только OpenAI-compatible контракт.',
-                        defaultExample: 'openai-compatible',
-                        readOnly: true,
-                    },
                     {
                         key: 'baseUrl',
                         label: 'Базовый URL',
                         value: llmConfig.baseUrl,
-                        description: 'Базовый URL до OpenAI-compatible API. Для LM Studio это обычно локальный `/v1` endpoint.',
-                        defaultExample: 'http://localhost:1234/v1',
+                        description: isAnthropicProvider
+                            ? 'Базовый URL до Anthropic API. Локально — как у OpenAI-compatible (`http://localhost:1234/v1`), запросы уйдут на `/v1/messages`.'
+                            : 'Базовый URL до OpenAI-compatible API. Для LM Studio это обычно локальный `/v1` endpoint.',
+                        defaultExample: llmDefaults.baseUrl,
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('baseUrl', value),
                     },
@@ -92,8 +127,10 @@ const SettingsScreenContent = () => {
                         key: 'apiKey',
                         label: 'API ключ',
                         value: llmConfig.apiKey,
-                        description: 'Ключ доступа к провайдеру. Для локального LM Studio можно хранить простое техническое значение.',
-                        defaultExample: 'lm-studio',
+                        description: isAnthropicProvider
+                            ? 'Ключ для прокси или Anthropic API. Локально можно оставить техническое значение вроде `lm-studio`.'
+                            : 'Ключ доступа к провайдеру. Для локального LM Studio можно хранить простое техническое значение.',
+                        defaultExample: llmDefaults.apiKey,
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('apiKey', value),
                     },
@@ -102,7 +139,7 @@ const SettingsScreenContent = () => {
                         label: 'Модель',
                         value: llmConfig.model,
                         description: 'Идентификатор модели, которую будем использовать для генерации и парсинга.',
-                        defaultExample: 'local-model',
+                        defaultExample: llmDefaults.model,
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('model', value),
                     },
@@ -111,7 +148,7 @@ const SettingsScreenContent = () => {
                         label: 'Температура',
                         value: String(llmConfig.temperature),
                         description: 'Степень вариативности ответа модели. Чем ниже, тем стабильнее и суше ответы.',
-                        defaultExample: '0.2',
+                        defaultExample: String(llmDefaults.temperature),
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('temperature', Number(value) || 0),
                     },
@@ -120,7 +157,7 @@ const SettingsScreenContent = () => {
                         label: 'Макс. токены',
                         value: String(llmConfig.maxTokens),
                         description: 'Максимальное количество токенов в ответе модели.',
-                        defaultExample: '6000',
+                        defaultExample: String(llmDefaults.maxTokens),
                         helperText: 'Одно значение.',
                         onChange: (value) => updateLlmConfig('maxTokens', Number(value) || 0),
                     },

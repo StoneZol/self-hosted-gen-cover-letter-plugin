@@ -2,7 +2,9 @@ import type {
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatMessage,
-    OpenAiCompatibleConfig,
+    GenerateChatCompletionOptions,
+    LlmConfig,
+    NormalizedLlmResponse,
 } from '../../types/llm/types'
 import { assertExtensionNetworkContext } from '../../extension/networkGuard'
 import { startServiceWorkerKeepAlive } from '../../extension/serviceWorkerKeepAlive'
@@ -22,10 +24,21 @@ function withReasoningDisabled(payload: ChatCompletionRequest): ChatCompletionRe
     }
 }
 
+function normalizeOpenAiResponse(response: ChatCompletionResponse): NormalizedLlmResponse {
+    const message = response?.choices?.[0]?.message
+    const content = message?.content?.trim() ?? ''
+    const text = content || message?.reasoning_content?.trim() || ''
+
+    return {
+        text,
+        finishReason: response?.choices?.[0]?.finish_reason ?? null,
+    }
+}
+
 async function postChatCompletion(
-    config: OpenAiCompatibleConfig,
+    config: LlmConfig,
     payload: ChatCompletionRequest,
-): Promise<ChatCompletionResponse> {
+): Promise<NormalizedLlmResponse> {
     assertExtensionNetworkContext()
 
     const stopKeepAlive = startServiceWorkerKeepAlive()
@@ -45,24 +58,15 @@ async function postChatCompletion(
             throw new Error(`LLM request failed: ${response.status} ${response.statusText}. ${errorText}`)
         }
 
-        return response.json() as Promise<ChatCompletionResponse>
+        const json = (await response.json()) as ChatCompletionResponse
+
+        return normalizeOpenAiResponse(json)
     } finally {
         stopKeepAlive()
     }
 }
 
-function extractHealthCheckText(response: ChatCompletionResponse): string {
-    const message = response?.choices?.[0]?.message
-    const content = message?.content?.trim() ?? ''
-
-    if (content) {
-        return content
-    }
-
-    return message?.reasoning_content?.trim() ?? ''
-}
-
-export async function healthCheckOpenAiCompatible(config: OpenAiCompatibleConfig): Promise<string> {
+export async function healthCheckOpenAiCompatible(config: LlmConfig): Promise<string> {
     const response = await postChatCompletion(config, {
         model: config.model,
         temperature: 0,
@@ -75,40 +79,22 @@ export async function healthCheckOpenAiCompatible(config: OpenAiCompatibleConfig
         ],
     })
 
-    const assistantText = extractHealthCheckText(response)
-
-    if (!assistantText) {
+    if (!response.text) {
         throw new Error('Сервер не вернул текст в ответе.')
     }
 
-    return assistantText
+    return response.text
 }
 
-export type GenerateChatCompletionOptions = {
-    maxTokens?: number
-    temperature?: number
-}
-
-export async function generateChatCompletion(
-    config: OpenAiCompatibleConfig,
+export async function generateOpenAiCompatibleChatCompletion(
+    config: LlmConfig,
     messages: ChatMessage[],
     options: GenerateChatCompletionOptions = {},
-): Promise<ChatCompletionResponse> {
+): Promise<NormalizedLlmResponse> {
     return postChatCompletion(config, {
         model: config.model,
         temperature: options.temperature ?? config.temperature,
         max_tokens: options.maxTokens ?? config.maxTokens,
         messages,
     })
-}
-
-export function extractAssistantText(response: ChatCompletionResponse): string {
-    const message = response?.choices?.[0]?.message
-    const content = message?.content?.trim() ?? ''
-
-    if (content) {
-        return content
-    }
-
-    return message?.reasoning_content?.trim() ?? ''
 }

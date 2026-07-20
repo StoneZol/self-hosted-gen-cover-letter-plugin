@@ -1,5 +1,5 @@
 import { loadCoverLetterConfig } from '@/lib/configs/coverLetter/storage'
-import { generateChatCompletion, extractAssistantText } from '@/lib/api/llm/openaiCompatible'
+import { extractAssistantText, generateChatCompletion } from '@/lib/api/llm/client'
 import { loadLlmConfig } from '@/lib/configs/llm/storage'
 import type { LastVacancy } from '@/lib/types/vacancy/types'
 import type { Resume } from '@/lib/types/resume/types'
