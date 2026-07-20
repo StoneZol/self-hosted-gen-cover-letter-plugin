@@ -81,11 +81,6 @@ const SettingsScreenContent = () => {
         <div className="flex flex-col gap-4">
             <ScreenHeader title="Настройки" />
 
-            <p className="text-sm text-muted-foreground">
-                Все конфиги всегда видны на экране. Для длинных значений используем `textarea`,
-                чтобы без боли хранить URL, regex, селекторы и будущие промпты.
-            </p>
-
             <section className="rounded-xl border border-border bg-card p-4">
                 <h2 className="text-sm font-semibold text-foreground">LLM</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -171,13 +166,13 @@ const SettingsScreenContent = () => {
                 className={cn(
                     'rounded-lg border px-4 py-3 text-sm font-medium transition-colors disabled:cursor-not-allowed',
                     healthCheckState === 'idle' &&
-                        'border-border bg-background text-foreground hover:border-primary hover:bg-primary/10',
+                    'border-border bg-background text-foreground hover:border-primary hover:bg-primary/10',
                     healthCheckState === 'checking' &&
-                        'border-border bg-background text-foreground opacity-70',
+                    'border-border bg-background text-foreground opacity-70',
                     healthCheckState === 'success' &&
-                        'border-green-500/50 bg-green-500/15 text-green-200',
+                    'border-green-500/50 bg-green-500/15 text-green-200',
                     healthCheckState === 'error' &&
-                        'border-red-500/40 bg-red-500/10 text-red-200',
+                    'border-red-500/40 bg-red-500/10 text-red-200',
                 )}
             >
                 {getHealthCheckButtonLabel(healthCheckState)}

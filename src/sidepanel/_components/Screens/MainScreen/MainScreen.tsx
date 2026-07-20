@@ -10,12 +10,6 @@ export const MainScreen = () => {
         <div className="flex flex-col gap-4">
             <ScreenHeader title="Главная" />
 
-            <section className="rounded-xl border border-border bg-card p-4">
-                <p className="text-sm text-muted-foreground">
-                    Настройте LLM, сохраните резюме на hh и генерируйте сопроводительные на вакансиях.
-                </p>
-            </section>
-
             <ResumePicker action="open" onOpen={() => setScreen('resume')} />
 
             <LastVacancyBlock />
