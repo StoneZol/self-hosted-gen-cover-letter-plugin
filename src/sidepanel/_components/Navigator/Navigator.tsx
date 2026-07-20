@@ -2,6 +2,7 @@ import useScreenStore from '@/sidepanel/store'
 import { DebugCurrentPage } from '@/components/DebugCurrentPage'
 import { ChatScreen } from '../Screens/ChatScreen'
 import { QuickChatInput } from '../QuickChatBlock'
+import { DisclaimerScreen } from '../Screens/DisclaimerScreen'
 import { GuideScreen } from '../Screens/GuideScreen'
 import { MainScreen } from '../Screens/MainScreen'
 import { ResumeScreen } from '../Screens/ResumeScreen/ResumeScreen'
@@ -29,6 +30,13 @@ const Navigator = () => {
             return (
                 <>
                     <GuideScreen />
+                    <DebugCurrentPage />
+                </>
+            )
+        case 'disclaimer':
+            return (
+                <>
+                    <DisclaimerScreen />
                     <DebugCurrentPage />
                 </>
             )

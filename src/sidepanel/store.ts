@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ScreenType = 'settings' | 'main' | 'resume' | 'guide' | 'chat'
+export type ScreenType = 'settings' | 'main' | 'resume' | 'guide' | 'chat' | 'disclaimer'
 
 const useScreenStore = create<{
     screen: ScreenType
