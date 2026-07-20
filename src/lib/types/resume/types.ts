@@ -12,13 +12,20 @@ const optionalString = z.preprocess((value) => {
     return value
 }, z.string().optional())
 
+function defaultArray<T extends z.ZodTypeAny>(itemSchema: T) {
+    return z.preprocess(
+        (value) => (Array.isArray(value) ? value : []),
+        z.array(itemSchema),
+    )
+}
+
 export const resumeSchema = z.object({
     id: z.string(),
     title: z.string(),
     source: z.string(),
     language: z.string(),
     selfAbout: optionalString,
-    experience: z.array(
+    experience: defaultArray(
         z.object({
             company: z.string(),
             position: z.string(),
@@ -27,22 +34,22 @@ export const resumeSchema = z.object({
             endDate: z.string(),
         }),
     ),
-    education: z.array(
+    education: defaultArray(
         z.object({
             organization: z.string(),
             degree: z.string(),
             speciality: z.string(),
         }),
     ),
-    skills: z.array(z.string()),
-    projects: z.array(
+    skills: defaultArray(z.string()),
+    projects: defaultArray(
         z.object({
             name: z.string(),
             description: z.string(),
             link: optionalString,
         }),
     ),
-    certifications: z.array(
+    certifications: defaultArray(
         z.object({
             name: z.string(),
             description: z.string(),

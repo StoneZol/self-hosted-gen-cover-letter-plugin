@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { cn } from "@/lib/helpers/cn"
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { cn } from '@/lib/helpers/cn'
 import { ConfirmDeleteButton } from './ConfirmDeleteButton'
 import { SettingsFieldPopover } from './SettingsFieldPopover'
 
@@ -25,6 +25,60 @@ type SettingsSectionProps = {
     headerActions?: ReactNode
 }
 
+type SettingsFieldTextareaProps = {
+    fieldKey: string
+    value: string
+    rows: number
+    readOnly?: boolean
+    onChange?: (value: string) => void
+}
+
+function SettingsFieldTextarea({
+    fieldKey,
+    value,
+    rows,
+    readOnly,
+    onChange,
+}: SettingsFieldTextareaProps) {
+    const [draft, setDraft] = useState(value)
+    const isFocusedRef = useRef(false)
+
+    useEffect(() => {
+        // While typing, keep local draft — parent round-trips (array ↔ string)
+        // must not wipe Enter / empty lines mid-edit.
+        if (!isFocusedRef.current) {
+            setDraft(value)
+        }
+    }, [fieldKey, value])
+
+    return (
+        <textarea
+            value={draft}
+            rows={Math.max(rows, draft.split('\n').length)}
+            readOnly={readOnly}
+            onFocus={() => {
+                isFocusedRef.current = true
+            }}
+            onBlur={() => {
+                isFocusedRef.current = false
+            }}
+            onChange={
+                readOnly || !onChange
+                    ? undefined
+                    : (event) => {
+                        const nextValue = event.target.value
+                        setDraft(nextValue)
+                        onChange(nextValue)
+                    }
+            }
+            className={cn(
+                'min-h-12 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 read-only:cursor-default read-only:bg-muted/60',
+                readOnly ? 'resize-none' : 'resize-y',
+            )}
+        />
+    )
+}
+
 export const SettingsSection = ({
     title,
     description,
@@ -43,7 +97,7 @@ export const SettingsSection = ({
     const content = (
         <div className="mt-4 flex flex-col gap-3">
             {fields.map((field) => (
-                <label key={field.key} className="flex flex-col gap-2">
+                <div key={field.key} className="flex flex-col gap-2">
                     <span className="relative flex items-center gap-2 text-sm font-medium text-foreground">
                         <span>{field.label}</span>
                         <SettingsFieldPopover
@@ -51,23 +105,17 @@ export const SettingsSection = ({
                             defaultExample={field.defaultExample}
                         />
                     </span>
-                    <textarea
+                    <SettingsFieldTextarea
+                        fieldKey={field.key}
                         value={field.value}
                         rows={field.rows ?? 2}
                         readOnly={field.readOnly}
-                        onChange={
-                            field.onChange
-                                ? (event) => field.onChange?.(event.target.value)
-                                : undefined
-                        }
-                        className={cn("min-h-12 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 read-only:cursor-default read-only:bg-muted/60",
-                            field.readOnly ? "resize-none" : "resize-y"
-                        )}
+                        onChange={field.onChange}
                     />
                     {field.helperText ? (
                         <span className="text-xs text-muted-foreground">{field.helperText}</span>
                     ) : null}
-                </label>
+                </div>
             ))}
         </div>
     )

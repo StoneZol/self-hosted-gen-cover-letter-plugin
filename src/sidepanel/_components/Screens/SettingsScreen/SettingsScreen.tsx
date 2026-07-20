@@ -204,7 +204,7 @@ const SettingsScreenContent = () => {
                         description:
                             'Инструкции для LLM: чем помогать, как отвечать про regex, селекторы и конфиги платформ.',
                         defaultExample: DEFAULT_QUICK_CHAT_CONFIG.systemPrompt,
-                        rows: 16,
+                        rows: 8,
                         helperText: 'Редактируйте под себя. Применяется после сохранения конфигов.',
                         onChange: (value) => updateQuickChatConfig('systemPrompt', value),
                     },

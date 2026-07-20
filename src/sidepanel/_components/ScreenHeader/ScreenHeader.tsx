@@ -48,9 +48,10 @@ const ScreenHeader = ({ title, className }: ScreenHeaderProps) => {
                 {showChatButton ? (
                     <button
                         type="button"
+                        title="Быстрый чат с LLM"
+                        aria-label="Быстрый чат с LLM"
                         onClick={() => setScreen('chat')}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                        aria-label="Быстрый чат"
                     >
                         <MessageSquare className="h-4 w-4" />
                     </button>
@@ -59,9 +60,10 @@ const ScreenHeader = ({ title, className }: ScreenHeaderProps) => {
                 {showGuideButton ? (
                     <button
                         type="button"
+                        title="Гайд по использованию"
+                        aria-label="Гайд по использованию"
                         onClick={() => setScreen('guide')}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                        aria-label="Гайд"
                     >
                         <BookOpen className="h-4 w-4" />
                     </button>
@@ -70,9 +72,10 @@ const ScreenHeader = ({ title, className }: ScreenHeaderProps) => {
                 {showSettingsButton ? (
                     <button
                         type="button"
+                        title="Настройки расширения"
+                        aria-label="Настройки расширения"
                         onClick={() => setScreen('settings')}
                         className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-                        aria-label="Настройки"
                     >
                         <Settings className="h-4 w-4" />
                     </button>

@@ -27,13 +27,13 @@ export const RESUME_JSON_SCHEMA = `{
       "description": "string",
       "link": "string (optional)"
     }
-  ],
+  ] (optional, default []),
   "certifications": [
     {
       "name": "string",
       "description": "string"
     }
-  ]
+  ] (optional, default [])
 }`
 
 export const RESUME_PARSING_OUTPUT_FORMAT_RULES = `Формат ответа:
